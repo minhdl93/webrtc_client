@@ -70,6 +70,16 @@
         android:src="@drawable/ic_action_end_call"
         android:background="@drawable/round_button"
         android:onClick="hangup"
+        android:id="@+id/hang_up"
+        />
+    <ImageButton
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_margin="10dp"
+        android:src="@drawable/camera_off"
+        android:onClick="stopvideo"
+        android:layout_toRightOf="@+id/hang_up"
+        android:scaleType="fitCenter"
         />
 
 </RelativeLayout>

@@ -2,10 +2,10 @@ package fr.pchab.androidrtc;
 
 import android.app.ListActivity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager.LayoutParams;
@@ -56,6 +56,8 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     private String username;
     private ListView mChatList;
     private ChatAdapter mChatAdapter;
+    private String myId;
+    private String number;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -84,6 +86,11 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
         vsv = (GLSurfaceView) findViewById(R.id.glview_call);
         vsv.setPreserveEGLContextOnPause(true);
         vsv.setKeepScreenOn(true);
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            myId = extras.getString("id");
+            number = extras.getString("number");
+        }
         VideoRendererGui.setView(vsv, new Runnable() {
             @Override
             public void run() {
@@ -100,13 +107,18 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING, scalingType, true);
 
         //if this is to answer the phone from other user, get the link which contain caller id
-        final Intent intent = getIntent();
-        final String action = intent.getAction();
+        //final Intent intent = getIntent();
 
-        if (Intent.ACTION_VIEW.equals(action)) {
-            final List<String> segments = intent.getData().getPathSegments();
-            callerId = segments.get(0);
-        }
+
+
+            Log.d("minh final","function end here");
+
+//        final String action = intent.getAction();
+//
+//        if (Intent.ACTION_VIEW.equals(action)) {
+//            final List<String> segments = intent.getData().getPathSegments();
+//            callerId = segments.get(0);
+//        }
     }
 
     /**
@@ -120,7 +132,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
         getWindowManager().getDefaultDisplay().getSize(displaySize);
         PeerConnectionParameters params = new PeerConnectionParameters(
                 true, false, displaySize.x, displaySize.y, 30, 1, VIDEO_CODEC_VP9, true, 1, AUDIO_CODEC_OPUS, true);
-        client = new WebRtcClient(this, mSocketAddress, params, VideoRendererGui.getEGLContext());
+        client = new WebRtcClient(this, mSocketAddress, params, VideoRendererGui.getEGLContext(),this.myId);
     }
 
     /**
@@ -167,6 +179,19 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     public void hangup(View view) {
         if(client != null) {
             onDestroy();
+        }
+    }
+
+    /**
+     * Handle when people click stopvideo button
+     *
+     * Stop all video resources and connection
+     *
+     * @param view the view that contain the button
+     */
+    public void stopvideo(View view) {
+        if(client != null) {
+            client.stopVideo();
         }
     }
 
@@ -226,10 +251,9 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     @Override
     public void onCallReady(String callId) {
         this.username      = client.client_id();
-        //Log.d("minh", this.username);
-        if (callerId != null) {
+        if (number != null) {
             try {
-                answer(callerId);
+                answer(number);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -268,6 +292,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
      * @param callerId the id of the caler
      */
     public void answer(String callerId) throws JSONException {
+        //client.sendMessage(callerId, "init", null);
         client.sendMessage(callerId, "init", null);
         client.sendConnected();
         startCam();
@@ -281,10 +306,11 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
      * @param callId the id of the user
      */
     public void call(String callId) {
-        Intent msg = new Intent(Intent.ACTION_SEND);
-        msg.putExtra(Intent.EXTRA_TEXT, mSocketAddress + callId);
-        msg.setType("text/plain");
-        startActivityForResult(Intent.createChooser(msg, "Call someone :"), VIDEO_CALL_SENT);
+//        Intent msg = new Intent(Intent.ACTION_SEND);
+//        msg.putExtra(Intent.EXTRA_TEXT, mSocketAddress + callId);
+//        msg.setType("text/plain");
+//        startActivityForResult(Intent.createChooser(msg, "Call someone :"), VIDEO_CALL_SENT);
+        startCam();
     }
 
     /**
@@ -293,12 +319,12 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
      * Start the camera
      *
      */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == VIDEO_CALL_SENT) {
-            startCam();
-        }
-    }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        if (requestCode == VIDEO_CALL_SENT) {
+//            startCam();
+//        }
+//    }
 
     /**
      * Start camera function

@@ -1,7 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Demo chat and call</string>
-    <string name="host">192.168.1.23</string>
+    <string name="host">192.168.1.19</string>
     <string name="port">3000</string>
     <string name="action_settings">Options</string>
+    <string name="title_activity_login">Demo chat and call</string>
+    <string name="no_call_history">No friends</string>
+    <!-- Strings related to login -->
+    <string name="prompt_email">Username</string>
+    <string name="prompt_password">Password (optional)</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_register">Register</string>
+    <string name="prompt_name">Name</string>
+    <string name="prompt_phone">Phone</string>
+    <string name="action_back_login">Back to login</string>
+    <string name="action_sign_in_short">Chat Video</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+    <string name="title_activity_register">RegisterActivity</string>
 </resources>

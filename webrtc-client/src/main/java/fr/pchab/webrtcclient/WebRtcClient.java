@@ -39,6 +39,7 @@ public class WebRtcClient {
     private VideoSource videoSource;
     private RtcListener mListener;
     private Socket client;
+    private String myId;
 
     /**
      * Implement this interface to be notified of events.
@@ -139,7 +140,17 @@ public class WebRtcClient {
         message.put("to", to);
         message.put("type", type);
         message.put("payload", payload);
+        //Log.d("minmin",to+" "+" "+type+" "+payload);
         client.emit("message", message);
+    }
+
+    public void sendOther(String to, String type, JSONObject payload) throws JSONException {
+        JSONObject message = new JSONObject();
+        message.put("to", to);
+        message.put("type", type);
+        message.put("payload", payload);
+        //Log.d("minmin",to+" "+" "+type+" "+payload);
+        client.emit("receiveCall", message);
     }
 
     public void sendConnected() throws JSONException {
@@ -165,6 +176,7 @@ public class WebRtcClient {
                     String from = data.getString("from");
                     String type = data.getString("type");
                     JSONObject payload = null;
+                    Log.d("minhhere ",from+" "+type);
                     if(!type.equals("init")) {
                         payload = data.getJSONObject("payload");
                     }
@@ -173,6 +185,38 @@ public class WebRtcClient {
                         // if MAX_PEER is reach, ignore the call
                         int endPoint = findEndPoint();
                         if(endPoint != MAX_PEER) {
+                            Peer peer = addPeer(from, endPoint);
+                            peer.pc.addStream(localMS);
+                            commandMap.get(type).execute(from, payload);
+                        }
+                    } else {
+                        commandMap.get(type).execute(from, payload);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        private Emitter.Listener onReceiveCall = new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                Log.d("minh","text");
+                JSONObject data = (JSONObject) args[0];
+                try {
+                    String from = data.getString("from");
+                    String type = data.getString("type");
+                    JSONObject payload = null;
+                    if(!type.equals("init")) {
+                        payload = data.getJSONObject("payload");
+                    }
+                    // if peer is unknown, try to add him
+
+                    if(!peers.containsKey(from)) {
+                        // if MAX_PEER is reach, ignore the call
+                        int endPoint = findEndPoint();
+                        if(endPoint != MAX_PEER) {
+                            Log.d("minh peer ",from);
                             Peer peer = addPeer(from, endPoint);
                             peer.pc.addStream(localMS);
                             commandMap.get(type).execute(from, payload);
@@ -288,7 +332,7 @@ public class WebRtcClient {
         }
 
         public Peer(String id, int endPoint) {
-            Log.d(TAG,"new Peer: "+id + " " + endPoint);
+            Log.d("anhminh","new Peer: "+id + " " + endPoint);
             this.pc = factory.createPeerConnection(iceServers, pcConstraints, this);
             this.id = id;
             this.endPoint = endPoint;
@@ -315,9 +359,10 @@ public class WebRtcClient {
         endPoints[peer.endPoint] = false;
     }
 
-    public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params, EGLContext mEGLcontext) {
+    public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params, EGLContext mEGLcontext,String myId) {
         mListener = listener;
         pcParams = params;
+        this.myId = myId;
         PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
                 params.videoCodecHwAcceleration, mEGLcontext);
         factory = new PeerConnectionFactory();
@@ -330,11 +375,19 @@ public class WebRtcClient {
         }
         client.on("id", messageHandler.onId);
         client.on("message", messageHandler.onMessage);
+        //client.on("receiveCall", messageHandler.onReceiveCall);
         client.on("chat", messageHandler.onChat);
 
         //add third kind of message such as chat.
 
         client.connect();
+        try {
+            JSONObject message = new JSONObject();
+            message.put("myId", this.myId);
+            client.emit("resetId", message);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121"));
         iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
 
@@ -372,6 +425,7 @@ public class WebRtcClient {
 
     public void stopVideo() {
         videoSource.stop();
+        client.emit("register", "ok");
     }
 
     private int findEndPoint() {
