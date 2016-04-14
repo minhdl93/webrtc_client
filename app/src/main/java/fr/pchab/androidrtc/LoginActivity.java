@@ -3,8 +3,10 @@ package fr.pchab.androidrtc;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.SharedPreferences;
@@ -273,7 +275,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             try {
                 HttpClient httpClient = new DefaultHttpClient();
                 // replace with your url
-                HttpPost httpPost = new HttpPost("http://192.168.1.19:3000/login");
+                String host = "http://" + getResources().getString(R.string.host);
+                host += (":" + getResources().getString(R.string.port) + "/");
+                HttpPost httpPost = new HttpPost(host + "login");
 
 
                 //Post Data
@@ -294,17 +298,27 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     HttpResponse response = httpClient.execute(httpPost);
                     String json_string = EntityUtils.toString(response.getEntity());
                     JSONObject json_data = new JSONObject(json_string);
-                    String id = json_data.getString("id");
-                    SharedPreferences sp = getSharedPreferences("SHARED_PREFS", MODE_PRIVATE);
-                    SharedPreferences.Editor edit = sp.edit();
-                    edit.putString("USER_NAME", id);
-                    edit.apply();
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                    startActivity(intent);
+                    int status = json_data.getInt("status");
+                    Log.d("debugminh", Integer.toString(status));
+                    if (status == 1) {
+                        String id = json_data.getString("id");
+                        String name = json_data.getString("name");
+                        SharedPreferences sp = getSharedPreferences("SHARED_PREFS", MODE_PRIVATE);
+                        SharedPreferences.Editor edit = sp.edit();
+                        edit.putString("USER_ID", id);
+                        edit.putString("USER_NAME", name);
+                        edit.apply();
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        startActivity(intent);
+                    } else {
+                        return false;
+                    }
+
                     //Log.d("log_tag", "id" + json_data.getInt("status") + ", status" + json_data.getString("id"));
 
                 } catch (ClientProtocolException e) {
                     // Log exception
+
 
                     Log.d("minh_res", "error");
                 } catch (IOException e) {
@@ -315,13 +329,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 }
             } catch (Exception e) {
             }
-//            try {
-//                // Simulate network access.
-//                Thread.sleep(2000);
-//            } catch (InterruptedException e) {
-//                return false;
-//            }
-
 
 
             // TODO: register the new account here.
@@ -336,8 +343,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             if (success) {
                 finish();
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
+                new AlertDialog.Builder(LoginActivity.this)
+                        .setTitle("Error")
+                        .setMessage("User name or/and password is not correct!")
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                mEmailView.setText("");
+                                mPasswordView.setText("");
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
             }
         }
 

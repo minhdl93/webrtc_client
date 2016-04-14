@@ -1,30 +1,30 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
     android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="80dp"
         android:background="@color/pn_red"
         >
-
         <TextView
             android:id="@+id/main_username"
-            android:text="Kevin"
-            android:layout_centerInParent="true"
             android:textColor="@color/white"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="25sp"/>
-
-
+            android:layout_width="match_parent"
+            android:layout_height="33dp"
+            android:textSize="25sp"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentTop="true"
+            android:gravity="center" />
 
         <Button
             android:id="@+id/video_receiver"
             style="?android:textAppearanceSmall"
             android:layout_width="match_parent"
+            android:layout_below="@+id/main_username"
             android:layout_height="wrap_content"
             android:text="Video receiver"
             android:onClick="receiverCall"

@@ -8,7 +8,7 @@
     <string name="no_call_history">No friends</string>
     <!-- Strings related to login -->
     <string name="prompt_email">Username</string>
-    <string name="prompt_password">Password (optional)</string>
+    <string name="prompt_password">Password</string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_register">Register</string>
     <string name="prompt_name">Name</string>

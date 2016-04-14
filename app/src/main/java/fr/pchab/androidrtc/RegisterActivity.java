@@ -3,7 +3,10 @@ package fr.pchab.androidrtc;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -138,6 +141,7 @@ public class RegisterActivity extends AppCompatActivity {
             showProgress(true);
             mAuthTask = new UserRegisterTask(email, password, username, name, phone);
             mAuthTask.execute((Void) null);
+
         }
     }
 
@@ -199,7 +203,9 @@ public class RegisterActivity extends AppCompatActivity {
                 //Log.d("register minh","here");
                 HttpClient httpClient = new DefaultHttpClient();
                 // replace with your url
-                HttpPost httpPost = new HttpPost("http://192.168.1.19:3000/register");
+                String host = "http://" + getResources().getString(R.string.host);
+                host += (":" + getResources().getString(R.string.port) + "/");
+                HttpPost httpPost = new HttpPost(host+"register");
 
                 //Post Data
                 List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>(5);
@@ -222,7 +228,21 @@ public class RegisterActivity extends AppCompatActivity {
                     HttpResponse response = httpClient.execute(httpPost);
                     String json_string = EntityUtils.toString(response.getEntity());
                     JSONObject json_data = new JSONObject(json_string);
-                    Log.d("log_tag", "id" + json_data);
+                    int status = json_data.getInt("status");
+                    if (status == 1){
+                        String id = json_data.getString("id");
+                        String name = mUsername;
+                        SharedPreferences sp = getSharedPreferences("SHARED_PREFS", MODE_PRIVATE);
+                        SharedPreferences.Editor edit = sp.edit();
+                        edit.putString("USER_ID", id);
+                        edit.putString("USER_NAME", name);
+                        edit.apply();
+                        Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+                        startActivity(intent);
+                    }else{
+                        return false;
+                    }
+
 
                 } catch (ClientProtocolException e) {
                     // Log exception
@@ -256,8 +276,22 @@ public class RegisterActivity extends AppCompatActivity {
             if (success) {
                 finish();
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
+                new AlertDialog.Builder(RegisterActivity.this)
+                        .setTitle("Error")
+                        .setMessage("Cannot register, please try again!")
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                mEmailView.setText("");
+                                mPasswordView.setText("");
+                                mUsernameView.setText("");
+                                mNameView.setText("");
+                                mPhoneView.setText("");
+
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+
             }
         }
 

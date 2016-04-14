@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
@@ -33,13 +34,15 @@ import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends ListActivity {
     private SharedPreferences mSharedPreferences;
-    private String username;
+    private String userName;
+    private String userId;
     private ListView mHistoryList;
     private HistoryAdapter mHistoryAdapter;
     private UserAdapter mUserAdapter;
     private AutoCompleteTextView mCallNumET;
     private TextView mUsernameTV;
     public ArrayList<HistoryItem> arrayOfUsers;
+    private Handler handler = new Handler();
     //public String json_users;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,18 +50,19 @@ public class MainActivity extends ListActivity {
         setContentView(R.layout.activity_main);
 
         this.mSharedPreferences = getSharedPreferences("SHARED_PREFS", MODE_PRIVATE);
-        if (!this.mSharedPreferences.contains("USER_NAME")) {
+        if (!this.mSharedPreferences.contains("USER_ID")) {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
             finish();
             return;
         }
-        this.username = this.mSharedPreferences.getString("USER_NAME", "");
+        this.userId = this.mSharedPreferences.getString("USER_ID", "");
+        this.userName = this.mSharedPreferences.getString("USER_NAME", "");
         this.mHistoryList = getListView();
         this.mCallNumET = (AutoCompleteTextView) findViewById(R.id.call_num);
         this.mUsernameTV = (TextView) findViewById(R.id.main_username);
 
-        this.mUsernameTV.setText(this.username);
+        this.mUsernameTV.setText(this.userName);
 
         ArrayList<User> adapter = new ArrayList<User>();
         String  json_users = "";
@@ -80,8 +84,9 @@ public class MainActivity extends ListActivity {
 
                 String id = jsonobj.getString("id");
                 String name = jsonobj.getString("name");
+
                 //Log.d("minhminh",id + " "+username);
-                if(!id.equals(username)){
+                if(!id.equals(userId)){
                     User x = new User(id,name);
                     adapter.add(x);
                 }
@@ -102,7 +107,7 @@ public class MainActivity extends ListActivity {
         String  json_friend = "";
         try{
             try {
-                json_friend= new ListFriendsTask().execute(username).get();
+                json_friend= new ListFriendsTask().execute(userId).get();
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
@@ -115,8 +120,10 @@ public class MainActivity extends ListActivity {
             JSONObject jsonobj = jsonarr.getJSONObject(i);
             String id = jsonobj.getString("friend_id");
             String name = "";
+            String status = "";
             try{
                 try {
+                    status = new RetrieveStatusTask().execute(id).get();
                     name= new RetrieveName().execute(id).get();
 
                 } catch (ExecutionException e) {
@@ -125,7 +132,7 @@ public class MainActivity extends ListActivity {
             } catch(InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            HistoryItem x = new HistoryItem(id,name, "online");
+            HistoryItem x = new HistoryItem(id,name, status);
             arrayOfUsers.add(x);
         }
         }catch (Exception e) {
@@ -141,6 +148,7 @@ public class MainActivity extends ListActivity {
 
         this.mHistoryAdapter = new HistoryAdapter(this, arrayOfUsers);
         this.mHistoryList.setAdapter(this.mHistoryAdapter);
+        startHandler();
     }
 
 
@@ -165,9 +173,43 @@ public class MainActivity extends ListActivity {
             String name = "";
             try{
                 HttpClient httpclient = new DefaultHttpClient();
-                HttpGet request = new HttpGet("http://192.168.1.19:3000/users");
+                String host = "http://" + getResources().getString(R.string.host);
+                host += (":" + getResources().getString(R.string.port) + "/");
+                HttpGet request = new HttpGet(host+"users/"+userId);
                 HttpResponse response = httpclient.execute(request);
                 name = EntityUtils.toString(response.getEntity());
+            }catch(Exception e){
+                Log.e("log_tag", "Error in http connection "+e.toString());
+            }
+            return name;
+        }
+
+        protected void onPostExecute(String feed) {
+        }
+    }
+
+    class RetrieveStatusTask extends AsyncTask<String, Void, String> {
+
+        private Exception exception;
+        @Override
+        protected String doInBackground(String... urls) {
+            String name = "";
+            String id = urls[0];
+            try{
+                HttpClient httpclient = new DefaultHttpClient();
+                String host = "http://" + getResources().getString(R.string.host);
+                host += (":" + getResources().getString(R.string.port) + "/");
+                HttpGet request = new HttpGet(host+"status/"+id);
+                HttpResponse response = httpclient.execute(request);
+                String json_string = EntityUtils.toString(response.getEntity());
+                JSONObject x = new JSONObject(json_string);
+                int status = x.getInt("status");
+                if (status == 1){
+                    name = "Online";
+                }else{
+                    name = "Offline";
+                }
+
             }catch(Exception e){
                 Log.e("log_tag", "Error in http connection "+e.toString());
             }
@@ -187,11 +229,13 @@ public class MainActivity extends ListActivity {
             try {
                 HttpClient httpClient = new DefaultHttpClient();
                 // replace with your url
-                HttpPost httpPost = new HttpPost("http://192.168.1.19:3000/addFriend");
+                String host = "http://" + getResources().getString(R.string.host);
+                host += (":" + getResources().getString(R.string.port) + "/");
+                HttpPost httpPost = new HttpPost(host+"addFriend");
 
                 //Post Data
                 List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>(2);
-                nameValuePair.add(new BasicNameValuePair("username",username));
+                nameValuePair.add(new BasicNameValuePair("username",userId));
                 nameValuePair.add(new BasicNameValuePair("friend_id",id));
 
 
@@ -242,7 +286,9 @@ public class MainActivity extends ListActivity {
             try {
                 HttpClient httpClient = new DefaultHttpClient();
                 // replace with your url
-                HttpPost httpPost = new HttpPost("http://192.168.1.19:3000/friends");
+                String host = "http://" + getResources().getString(R.string.host);
+                host += (":" + getResources().getString(R.string.port) + "/");
+                HttpPost httpPost = new HttpPost(host+"friends");
 
 
                 //Post Data
@@ -293,7 +339,9 @@ public class MainActivity extends ListActivity {
             try {
                 HttpClient httpClient = new DefaultHttpClient();
                 // replace with your url
-                HttpPost httpPost = new HttpPost("http://192.168.1.19:3000/friend_name");
+                String host = "http://" + getResources().getString(R.string.host);
+                host += (":" + getResources().getString(R.string.port) + "/");
+                HttpPost httpPost = new HttpPost(host+"friend_name");
 
 
                 //Post Data
@@ -342,7 +390,7 @@ public class MainActivity extends ListActivity {
      */
     public void makeCall(String id) {
         String callNum = id;
-        if (callNum.isEmpty() || callNum.equals(this.username)) {
+        if (callNum.isEmpty() || callNum.equals(this.userId)) {
             showToast("Enter a valid user ID to call.");
             return;
         }
@@ -351,7 +399,7 @@ public class MainActivity extends ListActivity {
 
     public void receiverCall(View view) {
         Intent intent = new Intent(MainActivity.this, RtcActivity.class);
-        intent.putExtra("id", this.username);
+        intent.putExtra("id", this.userId);
         startActivity(intent);
     }
 
@@ -369,7 +417,7 @@ public class MainActivity extends ListActivity {
     public void dispatchCall(final String callNum) {
         //Log.d("minhcall", this.username + " " + callNum);
         Intent intent = new Intent(MainActivity.this, RtcActivity.class);
-        intent.putExtra("id", this.username);
+        intent.putExtra("id", this.userId);
         intent.putExtra("number", callNum);
         startActivity(intent);
     }
@@ -427,6 +475,7 @@ public class MainActivity extends ListActivity {
     }
 
     public void addfriend(String id,String name){
+        this.mCallNumET.dismissDropDown();
         int result = 0;
         try {
             result = new AddFriendTask().execute(id).get();
@@ -442,9 +491,44 @@ public class MainActivity extends ListActivity {
         }else{
             showToast("error occured");
         }
+    }
 
+    private void checkFriendStatus(){
+        int checkChange = 0;
+        for (HistoryItem user : arrayOfUsers) {
+            String status;
+            try{
+                try {
+                    status = new RetrieveStatusTask().execute(user.getUserId()).get();
+                    if(status != null && !status.isEmpty() && !status.equals(user.getStatus())){
+                        user.setStatus(status);
+                        checkChange = 1;
+                    }
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+            } catch(InterruptedException e) {
+                throw new RuntimeException(e);
+            }
 
+        }
+        if (checkChange!=0){
+            mHistoryAdapter.notifyDataSetChanged();
+        }
+    }
 
+    public void startHandler()
+    {
+        handler.postDelayed(new Runnable()
+        {
+
+            @Override
+            public void run()
+            {
+                checkFriendStatus();
+                handler.postDelayed(this, 10000);
+            }
+        }, 10000);
     }
 
     /**

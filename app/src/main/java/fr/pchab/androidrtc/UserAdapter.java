@@ -68,7 +68,6 @@ public class UserAdapter extends ArrayAdapter<User> {
                 //SharedPreferences mSharedPreferences = v.getContext().getSharedPreferences("SHARED_PREFS", Context.MODE_PRIVATE);
                 //String username =  mSharedPreferences.getString("USER_NAME", "");
                 ((MainActivity)v.getContext()).addfriend(holder.id.getText().toString(),holder.user.getText().toString());
-
             }
         });
         holder.histItem=hItem;
