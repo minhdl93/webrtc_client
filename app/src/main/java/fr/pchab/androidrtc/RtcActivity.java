@@ -5,7 +5,6 @@ import android.content.Context;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager.LayoutParams;
@@ -23,10 +22,12 @@ import org.webrtc.VideoRendererGui;
 import java.util.LinkedList;
 import java.util.List;
 
+import fr.pchab.androidrtc.Adapter.ChatAdapter;
+import fr.pchab.androidrtc.Model.ChatMessage;
 import fr.pchab.webrtcclient.PeerConnectionParameters;
 import fr.pchab.webrtcclient.WebRtcClient;
 
-public class RtcActivity extends ListActivity implements WebRtcClient.RtcListener{
+public class RtcActivity extends ListActivity implements WebRtcClient.RtcListener {
     private final static int VIDEO_CALL_SENT = 666;
     private static final String VIDEO_CODEC_VP9 = "VP9";
     private static final String AUDIO_CODEC_OPUS = "opus";
@@ -71,7 +72,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
                         | LayoutParams.FLAG_TURN_SCREEN_ON);
         setContentView(R.layout.main);
         this.mChatEditText = (EditText) findViewById(R.id.chat_input);
-        this.mChatList     = getListView();
+        this.mChatList = getListView();
         this.mChatEditText = (EditText) findViewById(R.id.chat_input);
 
         //Set list chat adapter for the list activity
@@ -105,39 +106,24 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
         localRender = VideoRendererGui.create(
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING, scalingType, true);
-
-        //if this is to answer the phone from other user, get the link which contain caller id
-        //final Intent intent = getIntent();
-
-
-
-        Log.d("minh final","function end here");
-
-//        final String action = intent.getAction();
-//
-//        if (Intent.ACTION_VIEW.equals(action)) {
-//            final List<String> segments = intent.getData().getPathSegments();
-//            callerId = segments.get(0);
-//        }
     }
 
     /**
      * Initialize webrtc client
-     *
+     * <p/>
      * Set up the peer connection parameters get some video information and then pass these information to Webrtcclient class.
-     *
      */
     private void init() {
         Point displaySize = new Point();
         getWindowManager().getDefaultDisplay().getSize(displaySize);
         PeerConnectionParameters params = new PeerConnectionParameters(
                 true, false, displaySize.x, displaySize.y, 30, 1, VIDEO_CODEC_VP9, true, 1, AUDIO_CODEC_OPUS, true);
-        client = new WebRtcClient(this, mSocketAddress, params, VideoRendererGui.getEGLContext(),this.myId);
+        client = new WebRtcClient(this, mSocketAddress, params, VideoRendererGui.getEGLContext(), this.myId);
     }
 
     /**
      * Handle chat messages when people click the send button
-     *
+     * <p/>
      * Get the message from input then add it to chat adapter
      * Transmit the message to other users except the one who call this function
      *
@@ -171,65 +157,62 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
 
     /**
      * Handle when people click hangup button
-     *
+     * <p/>
      * Destroy all video resources and connection
      *
      * @param view the view that contain the button
      */
     public void hangup(View view) {
-        if(client != null) {
+        if (client != null) {
             onDestroy();
         }
     }
 
     /**
      * Handle when people click stopvideo button
-     *
+     * <p/>
      * Stop all video resources and connection
      *
      * @param view the view that contain the button
      */
     public void stopvideo(View view) {
-        if(client != null) {
+        if (client != null) {
             client.stopVideo();
         }
     }
 
     /**
      * Handle onPause event which is implement by RtcListener class
-     *
+     * <p/>
      * Pause the video source
-     *
      */
     @Override
     public void onPause() {
         super.onPause();
         vsv.onPause();
-        if(client != null) {
+        if (client != null) {
             client.onPause();
         }
     }
 
     /**
      * Handle onResume event which is implement by RtcListener class
-     *
+     * <p/>
      * Resume the video source
-     *
      */
     @Override
     public void onResume() {
         super.onResume();
         vsv.onResume();
-        if(client != null) {
+        if (client != null) {
             client.onResume();
         }
     }
 
     /**
      * Handle onDestroy event which is implement by RtcListener class
-     *
+     * <p/>
      * Destroy the video source
-     *
      */
     @Override
     public void onDestroy() {
@@ -242,7 +225,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
 
     /**
      * This function is being call when user have got an id from nodejs server
-     *
+     * <p/>
      * check if caller id is not null then answer the call
      * if not then start the camera and send id to other user
      *
@@ -250,11 +233,10 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
      */
     @Override
     public void onCallReady(String callId) {
-        this.username      = client.client_id();
-        Log.d("minh", this.username);
+        this.username = client.client_id();
         if (number != null) {
             try {
-                answer(number);
+                client.startClient(number, "init", null);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -263,16 +245,27 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
         }
     }
 
+    @Override
+    public void onAcceptCall(String callId) {
+        try {
+            try{ Thread.sleep(1000); }catch(InterruptedException e){ }
+            answer(callId);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     /**
      * This function is being when the chat event is being triggered
-     *
+     * <p/>
      * Add the chat message to the chat adapter
      *
-     * @param id the id of the user sent the chat
+     * @param id  the id of the user sent the chat
      * @param msg the message
      */
     @Override
-    public void receiveMessage(final String id,final String msg) {
+    public void receiveMessage(final String id, final String msg) {
 
         runOnUiThread(new Runnable() {
             @Override
@@ -286,52 +279,33 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
 
     /**
      * This function is being call to answer call from other user
-     *
+     * <p/>
      * send init message to the caller and connect
      * start the camera
      *
      * @param callerId the id of the caler
      */
     public void answer(String callerId) throws JSONException {
-        //client.sendMessage(callerId, "init", null);
         client.sendMessage(callerId, "init", null);
-        client.sendConnected();
         startCam();
     }
 
     /**
      * This function is to send message contain id to the other user in order to start a call
-     *
+     * <p/>
      * Start intent then start the message intent contain url and user id
      *
      * @param callId the id of the user
      */
     public void call(String callId) {
-//        Intent msg = new Intent(Intent.ACTION_SEND);
-//        msg.putExtra(Intent.EXTRA_TEXT, mSocketAddress + callId);
-//        msg.setType("text/plain");
-//        startActivityForResult(Intent.createChooser(msg, "Call someone :"), VIDEO_CALL_SENT);
         startCam();
     }
 
-    /**
-     * The function being triggered when the send intent is being called
-     *
-     * Start the camera
-     *
-     */
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        if (requestCode == VIDEO_CALL_SENT) {
-//            startCam();
-//        }
-//    }
 
     /**
      * Start camera function
-     *
+     * <p/>
      * call the webrtc start camera function
-     *
      */
     public void startCam() {
         // Camera settings
@@ -340,9 +314,8 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
 
     /**
      * Being called when call status change
-     *
+     * <p/>
      * Log message when webrtc status change
-     *
      */
     @Override
     public void onStatusChanged(final String newStatus) {
@@ -356,9 +329,8 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
 
     /**
      * Being called when local stream is added
-     *
+     * <p/>
      * Update render view for the local stream in the small window
-     *
      */
     @Override
     public void onLocalStream(MediaStream localStream) {
@@ -371,9 +343,8 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
 
     /**
      * Being called when remote stream is added
-     *
+     * <p/>
      * Update render view for the remote stream in the big window
-     *
      */
     @Override
     public void onAddRemoteStream(MediaStream remoteStream, int endPoint) {
@@ -387,11 +358,15 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
                 scalingType);
     }
 
+    @Override
+    public void onReceiveCall(String id) {
+
+    }
+
     /**
      * Being called when remote stream is removed
-     *
+     * <p/>
      * make local renderer become the big one again
-     *
      */
     @Override
     public void onRemoveRemoteStream(int endPoint) {
@@ -400,4 +375,5 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
                 scalingType);
     }
+
 }

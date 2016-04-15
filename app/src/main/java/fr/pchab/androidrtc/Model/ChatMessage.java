@@ -1,4 +1,4 @@
-package fr.pchab.androidrtc;
+package fr.pchab.androidrtc.Model;
 
 /**
  * Created by gumiMinh on 4/6/16.

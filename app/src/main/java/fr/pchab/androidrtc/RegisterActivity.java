@@ -256,13 +256,6 @@ public class RegisterActivity extends AppCompatActivity {
                 }
             } catch (Exception e) {
             }
-//            try {
-//                // Simulate network access.
-//                Thread.sleep(2000);
-//            } catch (InterruptedException e) {
-//                return false;
-//            }
-
 
             // TODO: register the new account here.
             return true;

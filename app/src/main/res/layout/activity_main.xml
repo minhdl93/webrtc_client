@@ -2,103 +2,69 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context=".MainActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:background="@color/pn_red"
-        >
+        android:layout_height="38dp"
+        android:background="@color/pn_red">
+
         <TextView
             android:id="@+id/main_username"
-            android:textColor="@color/white"
             android:layout_width="match_parent"
             android:layout_height="33dp"
-            android:textSize="25sp"
-            android:layout_centerHorizontal="true"
             android:layout_alignParentTop="true"
-            android:gravity="center" />
-
-        <Button
-            android:id="@+id/video_receiver"
-            style="?android:textAppearanceSmall"
-            android:layout_width="match_parent"
-            android:layout_below="@+id/main_username"
-            android:layout_height="wrap_content"
-            android:text="Video receiver"
-            android:onClick="receiverCall"
-            android:textStyle="bold"/>
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="25sp" />
 
         <View
-            android:layout_alignParentBottom="true"
             android:layout_width="match_parent"
             android:layout_height="3dp"
-            android:background="@drawable/light_fade_up"/>
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/light_fade_up" />
 
     </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft  ="@dimen/activity_horizontal_margin"
-        android:paddingRight ="@dimen/activity_horizontal_margin"
-        android:paddingTop   ="10dp"
+        android:orientation="horizontal"
         android:paddingBottom="10dp"
-        android:orientation="horizontal">
-        <!--<EditText-->
-            <!--android:id="@+id/call_num"-->
-            <!--android:hint="Enter a number..."-->
-            <!--android:inputType="textShortMessage"-->
-            <!--android:maxLines="1"-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_weight="4"/>-->
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="10dp">
 
         <AutoCompleteTextView
             android:id="@+id/call_num"
-            android:hint="Enter a number..."
-            android:inputType="textShortMessage"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="4"/>
-
-        <!--<RelativeLayout-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_weight="1">-->
-            <!--<ImageButton-->
-                <!--android:background="@drawable/round_button_send"-->
-                <!--android:src="@drawable/ic_action_call"-->
-                <!--android:layout_centerInParent="true"-->
-                <!--android:layout_height="50dp"-->
-                <!--android:layout_width ="50dp"-->
-                <!--android:scaleType="fitCenter"-->
-                <!--android:padding="8dp"-->
-                <!--android:onClick="makeCall"/>-->
-        <!--</RelativeLayout>-->
+            android:layout_weight="4"
+            android:hint="Enter name to search"
+            android:inputType="textShortMessage" />
 
     </LinearLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="3dp"
-        android:background="@drawable/light_fade_down"/>
+        android:background="@drawable/light_fade_down" />
 
     <ListView
         android:id="@android:id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
+        android:layout_height="match_parent" />
+
     <TextView
         android:id="@android:id/empty"
-        android:background="@color/grey"
-        android:gravity="center"
-        android:textSize="20sp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/grey"
+        android:gravity="center"
         android:text="@string/no_call_history"
-        />
+        android:textSize="20sp" />
 
 
 </LinearLayout>

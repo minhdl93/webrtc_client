@@ -1,4 +1,4 @@
-package fr.pchab.androidrtc;
+package fr.pchab.androidrtc.Adapter;
 
 /**
  * Created by gumiMinh on 4/6/16.
@@ -20,6 +20,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 
+import fr.pchab.androidrtc.Model.ChatMessage;
+import fr.pchab.androidrtc.R;
+
 /**
  * Created by GleasonK on 6/25/15.
  */
@@ -34,7 +37,7 @@ public class ChatAdapter extends ArrayAdapter<ChatMessage> {
         super(context, R.layout.chat_message_row_layout, android.R.id.text1, values);
         this.context = context;
         this.inflater = LayoutInflater.from(context);
-        this.values=values;
+        this.values = values;
     }
 
     class ViewHolder {
@@ -47,8 +50,12 @@ public class ChatAdapter extends ArrayAdapter<ChatMessage> {
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
         ChatMessage chatMsg;
-        if(position >= values.size()){ chatMsg = new ChatMessage("","",0); } // Catch Edge Case
-        else { chatMsg = this.values.get(position); }
+        if (position >= values.size()) {
+            chatMsg = new ChatMessage("", "", 0);
+        } // Catch Edge Case
+        else {
+            chatMsg = this.values.get(position);
+        }
         ViewHolder holder;
         if (convertView == null) {
             holder = new ViewHolder();
@@ -64,7 +71,7 @@ public class ChatAdapter extends ArrayAdapter<ChatMessage> {
         holder.sender.setText(chatMsg.getSender() + ": ");
         holder.message.setText(chatMsg.getMessage());
         holder.timeStamp.setText(formatTimeStamp(chatMsg.getTimeStamp()));
-        holder.chatMsg=chatMsg;
+        holder.chatMsg = chatMsg;
         setFadeOut3(convertView, chatMsg);
         return convertView;
     }
@@ -80,22 +87,24 @@ public class ChatAdapter extends ArrayAdapter<ChatMessage> {
     }
 
     @Override
-    public long getItemId(int position){
-        if (position >= values.size()){ return -1; }
+    public long getItemId(int position) {
+        if (position >= values.size()) {
+            return -1;
+        }
         return values.get(position).hashCode();
     }
 
-    public void removeMsg(int loc){
+    public void removeMsg(int loc) {
         this.values.remove(loc);
         notifyDataSetChanged();
     }
 
-    public void addMessage(ChatMessage chatMsg){
+    public void addMessage(ChatMessage chatMsg) {
         this.values.add(chatMsg);
         notifyDataSetChanged();
     }
 
-    private void setFadeOut2(final View view, final ChatMessage message){
+    private void setFadeOut2(final View view, final ChatMessage message) {
         Log.i("AdapterFade", "Caling Fade2");
         view.animate().setDuration(1000).setStartDelay(2000).alpha(0)
                 .withEndAction(new Runnable() {
@@ -109,10 +118,10 @@ public class ChatAdapter extends ArrayAdapter<ChatMessage> {
                 });
     }
 
-    private void setFadeOut3(final View view, final ChatMessage message){
+    private void setFadeOut3(final View view, final ChatMessage message) {
         Log.i("AdapterFade", "Caling Fade3");
         long elapsed = System.currentTimeMillis() - message.getTimeStamp();
-        if (elapsed >= FADE_TIMEOUT){
+        if (elapsed >= FADE_TIMEOUT) {
             if (values.contains(message))
                 values.remove(message);
             notifyDataSetChanged();
@@ -122,7 +131,7 @@ public class ChatAdapter extends ArrayAdapter<ChatMessage> {
                 .withEndAction(new Runnable() {
                     @Override
                     public void run() {
-                        if (values.contains(message)){
+                        if (values.contains(message)) {
                             values.remove(message);
                         }
                         notifyDataSetChanged();
@@ -132,9 +141,9 @@ public class ChatAdapter extends ArrayAdapter<ChatMessage> {
     }
 
 
-    private void setFadeOut(final View view, final ChatMessage message){
+    private void setFadeOut(final View view, final ChatMessage message) {
         long elapsed = System.currentTimeMillis() - message.getTimeStamp();
-        if (elapsed >= FADE_TIMEOUT){
+        if (elapsed >= FADE_TIMEOUT) {
             if (values.contains(message))
                 values.remove(message);
             notifyDataSetChanged();
@@ -154,11 +163,12 @@ public class ChatAdapter extends ArrayAdapter<ChatMessage> {
         view.setAnimation(animation);
         animation.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) {}
+            public void onAnimationStart(Animation animation) {
+            }
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                if (values.contains(message)){
+                if (values.contains(message)) {
                     values.remove(message);
                 }
                 notifyDataSetChanged();
@@ -167,19 +177,19 @@ public class ChatAdapter extends ArrayAdapter<ChatMessage> {
             }
 
             @Override
-            public void onAnimationRepeat(Animation animation) {}
+            public void onAnimationRepeat(Animation animation) {
+            }
         });
-
-
     }
 
     /**
      * Format the long System.currentTimeMillis() to a better looking timestamp. Uses a calendar
-     *   object to format with the user's current time zone.
+     * object to format with the user's current time zone.
+     *
      * @param timeStamp
      * @return
      */
-    public static String formatTimeStamp(long timeStamp){
+    public static String formatTimeStamp(long timeStamp) {
         // Create a DateFormatter object for displaying date in specified format.
         SimpleDateFormat formatter = new SimpleDateFormat("h:mm.ss a");
 

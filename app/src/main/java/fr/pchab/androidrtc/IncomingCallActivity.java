@@ -1,63 +1,99 @@
 package fr.pchab.androidrtc;
 
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
+
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.URISyntaxException;
 
 public class IncomingCallActivity extends AppCompatActivity {
-//    private String username;
-//    private String callUser;
-//    private TextView mCallerID;
-//    private String number;
-//    private String userId;
-//    private String userName;
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_incoming_call);
-//        Bundle extras = getIntent().getExtras();
-//        number = extras.getString("NUMBERS");
-//        userId = extras.getString("USER_ID");
-//        name = extras.getString("NAME");
-//
-//
-//        this.mCallerID = (TextView) findViewById(R.id.caller_id);
-//        this.mCallerID.setText(this.callUser);
-//    }
-//
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
-//
-//    public void acceptCall(View view){
-//        Intent intent = new Intent(MainActivity.this, RtcActivity.class);
-//        intent.putExtra("id", this.userId);
-//        intent.putExtra("number", callNum);
-//        startActivity(intent);
-//    }
-//
-//    /**
-//     * Publish a hangup command if rejecting call.
-//     * @param view
-//     */
-//    public void rejectCall(View view){
-//        JSONObject hangupMsg = PnPeerConnectionClient.generateHangupPacket(this.username);
-//        this.mPubNub.publish(this.callUser, hangupMsg, new Callback() {
-//            @Override
-//            public void successCallback(String channel, Object message) {
-//                Intent intent = new Intent(IncomingCallActivity.this, MainActivity.class);
-//                startActivity(intent);
-//            }
-//        });
-//    }
+    private String callerName;
+    private TextView mCallerID;
+    private String userId;
+    private Socket client;
+    private String callerId;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_incoming_call);
+        Bundle extras = getIntent().getExtras();
+        callerId = extras.getString("CALLER_ID");
+        userId = extras.getString("USER_ID");
+        callerName = extras.getString("CALLER_NAME");
+
+
+        this.mCallerID = (TextView) findViewById(R.id.caller_id);
+        this.mCallerID.setText(this.callerName);
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void acceptCall(View view) {
+        finish();
+        Intent intent = new Intent(IncomingCallActivity.this, RtcActivity.class);
+        intent.putExtra("id", this.userId);
+        startActivity(intent);
+        String host = "http://" + getResources().getString(R.string.host);
+        host += (":" + getResources().getString(R.string.port) + "/");
+        try {
+            client = IO.socket(host);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        client.connect();
+        try {
+            JSONObject message = new JSONObject();
+            message.put("myId", userId);
+            message.put("callerId", callerId);
+            client.emit("acceptcall", message);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Publish a hangup command if rejecting call.
+     *
+     * @param view
+     */
+    public void rejectCall(View view) {
+        finish();
+        String host = "http://" + getResources().getString(R.string.host);
+        host += (":" + getResources().getString(R.string.port) + "/");
+        try {
+            client = IO.socket(host);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        client.connect();
+        try {
+            JSONObject message = new JSONObject();
+            message.put("myId", userId);
+            message.put("callerId", callerId);
+            client.emit("ejectcall", message);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 }

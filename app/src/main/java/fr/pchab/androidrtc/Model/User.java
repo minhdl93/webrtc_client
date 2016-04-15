@@ -1,24 +1,17 @@
-package fr.pchab.androidrtc;
+package fr.pchab.androidrtc.Model;
 
 /**
  * Created by gumiMinh on 4/11/16.
  */
-public class HistoryItem {
+public class User {
     private String userId;
-    private String status;
     private String userName;
 
-    public HistoryItem(String userId,String userName) {
+    public User(String userId,String userName) {
         this.userId = userId;
         this.userName = userName;
-        this.status = "Offline";
     }
 
-    public HistoryItem(String userId,String userName, String status) {
-        this.userId = userId;
-        this.userName = userName;
-        this.status = status;
-    }
 
     public String getUserId() {
         return userId;
@@ -27,13 +20,6 @@ public class HistoryItem {
         return userName;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
 
     @Override
     public boolean equals(Object o) {

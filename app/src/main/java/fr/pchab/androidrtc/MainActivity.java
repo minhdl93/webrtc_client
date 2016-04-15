@@ -7,11 +7,14 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.github.nkzawa.emitter.Emitter;
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -24,13 +27,20 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import fr.pchab.androidrtc.Adapter.HistoryAdapter;
+import fr.pchab.androidrtc.Adapter.UserAdapter;
+import fr.pchab.androidrtc.Model.HistoryItem;
+import fr.pchab.androidrtc.Model.User;
 
 public class MainActivity extends ListActivity {
     private SharedPreferences mSharedPreferences;
@@ -43,12 +53,14 @@ public class MainActivity extends ListActivity {
     private TextView mUsernameTV;
     public ArrayList<HistoryItem> arrayOfUsers;
     private Handler handler = new Handler();
-    //public String json_users;
+    private Socket client;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //Get userid and username from login or registre acitivity
         this.mSharedPreferences = getSharedPreferences("SHARED_PREFS", MODE_PRIVATE);
         if (!this.mSharedPreferences.contains("USER_ID")) {
             Intent intent = new Intent(this, LoginActivity.class);
@@ -58,128 +70,156 @@ public class MainActivity extends ListActivity {
         }
         this.userId = this.mSharedPreferences.getString("USER_ID", "");
         this.userName = this.mSharedPreferences.getString("USER_NAME", "");
+
+
         this.mHistoryList = getListView();
         this.mCallNumET = (AutoCompleteTextView) findViewById(R.id.call_num);
         this.mUsernameTV = (TextView) findViewById(R.id.main_username);
 
         this.mUsernameTV.setText(this.userName);
 
+        //Add all user for searching and add friends
         ArrayList<User> adapter = new ArrayList<User>();
-        String  json_users = "";
-        try{
+        String json_users = "";
+        try {
             try {
-                json_users= new RetrieveUserTask().execute().get();
+                json_users = new RetrieveUserTask().execute().get();
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
-        } catch(InterruptedException e) {
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
 
 
-        try{
+        try {
             JSONArray jsonarr = new JSONArray(json_users);
             for (int i = 0; i < jsonarr.length(); i++) {
                 JSONObject jsonobj = jsonarr.getJSONObject(i);
 
                 String id = jsonobj.getString("id");
                 String name = jsonobj.getString("name");
-
-                //Log.d("minhminh",id + " "+username);
-                if(!id.equals(userId)){
-                    User x = new User(id,name);
+                if (!id.equals(userId)) {
+                    User x = new User(id, name);
                     adapter.add(x);
                 }
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
         }
 
 
         this.mUserAdapter = new UserAdapter(this, adapter);
         mCallNumET.setThreshold(1);//will start working from first character
         mCallNumET.setAdapter(this.mUserAdapter);//setting the adapter data into the AutoCompleteTextView
-        //mCallNumET.setTextColor(Color.RED);
 
 
-
+        //add friends to friend list
         arrayOfUsers = new ArrayList<HistoryItem>();
-
-        String  json_friend = "";
-        try{
+        String json_friend = "";
+        try {
             try {
-                json_friend= new ListFriendsTask().execute(userId).get();
+                json_friend = new ListFriendsTask().execute(userId).get();
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
-        } catch(InterruptedException e) {
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        try{
+        try {
             JSONArray jsonarr = new JSONArray(json_friend);
             for (int i = 0; i < jsonarr.length(); i++) {
                 JSONObject jsonobj = jsonarr.getJSONObject(i);
                 String id = jsonobj.getString("friend_id");
                 String name = "";
                 String status = "";
-                try{
+                try {
                     try {
                         status = new RetrieveStatusTask().execute(id).get();
-                        name= new RetrieveName().execute(id).get();
+                        name = new RetrieveName().execute(id).get();
 
                     } catch (ExecutionException e) {
                         e.printStackTrace();
                     }
-                } catch(InterruptedException e) {
+                } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                HistoryItem x = new HistoryItem(id,name, status);
+                HistoryItem x = new HistoryItem(id, name, status);
                 arrayOfUsers.add(x);
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
         }
-
-
-
-
-//        HistoryItem a = new HistoryItem("11520232", "online");
-//        HistoryItem b = new HistoryItem("11520418", "online");
-//        arrayOfUsers.add(a);
-//        arrayOfUsers.add(b);
 
         this.mHistoryAdapter = new HistoryAdapter(this, arrayOfUsers);
         this.mHistoryList.setAdapter(this.mHistoryAdapter);
+
+        //start other thread for checking friend online status
         startHandler();
+
+        //Receive call callback from when other people call you
+        String host = "http://" + getResources().getString(R.string.host);
+        host += (":" + getResources().getString(R.string.port) + "/");
+        try {
+            client = IO.socket(host);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        client.on("receiveCall", onReceiveCall);
+
+        client.connect();
+        try {
+            JSONObject message = new JSONObject();
+            message.put("myId", userId);
+            client.emit("resetId", message);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
+    /**
+     * Receive call emitter callback when others call you.
+     *
+     * @param args json value contain callerid, userid and caller name
+     */
+    private Emitter.Listener onReceiveCall = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            Log.d("minhfinal", "minh");
+            JSONObject data = (JSONObject) args[0];
+            try {
+                String from = data.getString("from");
+                client.close();
+                Intent intent = new Intent(MainActivity.this, IncomingCallActivity.class);
+                intent.putExtra("CALLER_ID", from);
+                intent.putExtra("USER_ID", userId);
+                intent.putExtra("CALLER_NAME", "Lien Minh");
+                startActivity(intent);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    };
 
-//    public String getUserJsonString(){
-//        String name = "";
-//        try{
-//            HttpClient httpclient = new DefaultHttpClient();
-//            HttpGet request = new HttpGet("http://192.168.1.19:3000/users");
-//            HttpResponse response = httpclient.execute(request);
-//            name = EntityUtils.toString(response.getEntity());
-//        }catch(Exception e){
-//            Log.e("log_tag", "Error in http connection "+e.toString());
-//        }
-//        return name;
-//    }
-
+    /**
+     * Task to get list of users.
+     *
+     * @param Void
+     */
     class RetrieveUserTask extends AsyncTask<Void, Void, String> {
 
         private Exception exception;
+
         @Override
         protected String doInBackground(Void... urls) {
             String name = "";
-            try{
+            try {
                 HttpClient httpclient = new DefaultHttpClient();
                 String host = "http://" + getResources().getString(R.string.host);
                 host += (":" + getResources().getString(R.string.port) + "/");
-                HttpGet request = new HttpGet(host+"users/"+userId);
+                HttpGet request = new HttpGet(host + "users/" + userId);
                 HttpResponse response = httpclient.execute(request);
                 name = EntityUtils.toString(response.getEntity());
-            }catch(Exception e){
-                Log.e("log_tag", "Error in http connection "+e.toString());
+            } catch (Exception e) {
+                Log.e("log_tag", "Error in http connection " + e.toString());
             }
             return name;
         }
@@ -188,30 +228,36 @@ public class MainActivity extends ListActivity {
         }
     }
 
+    /**
+     * Task to get status of a user.
+     *
+     * @param String id of user you want to get status
+     */
     class RetrieveStatusTask extends AsyncTask<String, Void, String> {
 
         private Exception exception;
+
         @Override
         protected String doInBackground(String... urls) {
             String name = "";
             String id = urls[0];
-            try{
+            try {
                 HttpClient httpclient = new DefaultHttpClient();
                 String host = "http://" + getResources().getString(R.string.host);
                 host += (":" + getResources().getString(R.string.port) + "/");
-                HttpGet request = new HttpGet(host+"status/"+id);
+                HttpGet request = new HttpGet(host + "status/" + id);
                 HttpResponse response = httpclient.execute(request);
                 String json_string = EntityUtils.toString(response.getEntity());
                 JSONObject x = new JSONObject(json_string);
                 int status = x.getInt("status");
-                if (status == 1){
+                if (status == 1) {
                     name = "Online";
-                }else{
+                } else {
                     name = "Offline";
                 }
 
-            }catch(Exception e){
-                Log.e("log_tag", "Error in http connection "+e.toString());
+            } catch (Exception e) {
+                Log.e("log_tag", "Error in http connection " + e.toString());
             }
             return name;
         }
@@ -220,23 +266,29 @@ public class MainActivity extends ListActivity {
         }
     }
 
+    /**
+     * Task to add friend to your account.
+     *
+     * @param YOUR ID AND USER ID THAT YOU WANT TO ADD AS FRIEND
+     */
     class AddFriendTask extends AsyncTask<String, Void, Integer> {
 
         private Exception exception;
+
         @Override
         protected Integer doInBackground(String... urls) {
-            String id= urls[0];
+            String id = urls[0];
             try {
                 HttpClient httpClient = new DefaultHttpClient();
                 // replace with your url
                 String host = "http://" + getResources().getString(R.string.host);
                 host += (":" + getResources().getString(R.string.port) + "/");
-                HttpPost httpPost = new HttpPost(host+"addFriend");
+                HttpPost httpPost = new HttpPost(host + "addFriend");
 
                 //Post Data
                 List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>(2);
-                nameValuePair.add(new BasicNameValuePair("username",userId));
-                nameValuePair.add(new BasicNameValuePair("friend_id",id));
+                nameValuePair.add(new BasicNameValuePair("username", userId));
+                nameValuePair.add(new BasicNameValuePair("friend_id", id));
 
 
                 //Encoding POST data
@@ -252,9 +304,9 @@ public class MainActivity extends ListActivity {
                     HttpResponse response = httpClient.execute(httpPost);
                     String json_string = EntityUtils.toString(response.getEntity());
                     JSONObject json_data = new JSONObject(json_string);
-                    int status= json_data.getInt("status");
-                    Log.d("minhstatus",Integer.toString(status) );
-                    if (status==1){
+                    int status = json_data.getInt("status");
+                    Log.d("minhstatus", Integer.toString(status));
+                    if (status == 1) {
                         return 1;
                     }
 
@@ -276,19 +328,25 @@ public class MainActivity extends ListActivity {
         }
     }
 
+    /**
+     * Task to list all of your friends.
+     *
+     * @param String id to get list of friends
+     */
     class ListFriendsTask extends AsyncTask<String, Void, String> {
 
         private Exception exception;
+
         @Override
         protected String doInBackground(String... urls) {
-            String json_string ="";
-            String user=urls[0];
+            String json_string = "";
+            String user = urls[0];
             try {
                 HttpClient httpClient = new DefaultHttpClient();
                 // replace with your url
                 String host = "http://" + getResources().getString(R.string.host);
                 host += (":" + getResources().getString(R.string.port) + "/");
-                HttpPost httpPost = new HttpPost(host+"friends");
+                HttpPost httpPost = new HttpPost(host + "friends");
 
 
                 //Post Data
@@ -328,20 +386,26 @@ public class MainActivity extends ListActivity {
         }
     }
 
+    /**
+     * Task to get name of a users.
+     *
+     * @param String id of the user you want to get name
+     */
     class RetrieveName extends AsyncTask<String, Void, String> {
 
         private Exception exception;
+
         @Override
         protected String doInBackground(String... urls) {
-            String json_string ="";
-            String user=urls[0];
+            String json_string = "";
+            String user = urls[0];
 
             try {
                 HttpClient httpClient = new DefaultHttpClient();
                 // replace with your url
                 String host = "http://" + getResources().getString(R.string.host);
                 host += (":" + getResources().getString(R.string.port) + "/");
-                HttpPost httpPost = new HttpPost(host+"friend_name");
+                HttpPost httpPost = new HttpPost(host + "friend_name");
 
 
                 //Post Data
@@ -362,7 +426,7 @@ public class MainActivity extends ListActivity {
                     json_string = EntityUtils.toString(response.getEntity());
                     JSONObject x = new JSONObject(json_string);
                     json_string = x.getString("name");
-                    Log.d("minhminhminh",json_string);
+                    Log.d("minhminhminh", json_string);
 
                 } catch (ClientProtocolException e) {
                     // Log exception
@@ -386,21 +450,19 @@ public class MainActivity extends ListActivity {
     /**
      * Take the user to a video screen. USER_NAME is a required field.
      *
-     * @param view button that is clicked to trigger toVideo
+     * @param id button that is clicked to trigger toVideo
      */
-    public void makeCall(String id) {
+    public void makeCall(String id, String status) {
         String callNum = id;
         if (callNum.isEmpty() || callNum.equals(this.userId)) {
             showToast("Enter a valid user ID to call.");
             return;
         }
-        dispatchCall(callNum);
-    }
-
-    public void receiverCall(View view) {
-        Intent intent = new Intent(MainActivity.this, RtcActivity.class);
-        intent.putExtra("id", this.userId);
-        startActivity(intent);
+        if (status.equals("Offline")){
+            showToast("Your friend is offline. Please call again later!");
+        }else{
+            dispatchCall(callNum);
+        }
     }
 
     /**
@@ -415,50 +477,12 @@ public class MainActivity extends ListActivity {
      * @param callNum Number to publish a call to.
      */
     public void dispatchCall(final String callNum) {
-        //Log.d("minhcall", this.username + " " + callNum);
         Intent intent = new Intent(MainActivity.this, RtcActivity.class);
         intent.putExtra("id", this.userId);
         intent.putExtra("number", callNum);
         startActivity(intent);
     }
 
-    /**
-     * Handle incoming calls. TODO: Implement an accept/reject functionality.
-     * @param userId
-     */
-//    private void dispatchIncomingCall(String userId){
-//        showToast("Call from: " + userId);
-//        Log.d("minh", "username " + this.username + " main call user: "+userId);
-//        Intent intent = new Intent(MainActivity.this, IncomingCallActivity.class);
-//        intent.putExtra(Constants.USER_NAME, username);
-//        intent.putExtra(Constants.CALL_USER, userId);
-//        startActivity(intent);
-//    }
-
-//    private void setUserStatus(String status){
-//        try {
-//            JSONObject state = new JSONObject();
-//            state.put(Constants.JSON_STATUS, status);
-//            this.mPubNub.setState(this.stdByChannel, this.username, state, new Callback() {
-//                @Override
-//                public void successCallback(String channel, Object message) {
-//                    Log.d("MA-sUS","State Set: " + message.toString());
-//                }
-//            });
-//        } catch (JSONException e){
-//            e.printStackTrace();
-//        }
-//    }
-
-//    private void getUserStatus(String userId){
-//        String stdByUser = userId + Constants.STDBY_SUFFIX;
-//        this.mPubNub.getState(stdByUser, userId, new Callback() {
-//            @Override
-//            public void successCallback(String channel, Object message) {
-//                Log.d("MA-gUS", "User Status: " + message.toString());
-//            }
-//        });
-//    }
 
     /**
      * Ensures that toast is run on the UI thread.
@@ -474,7 +498,12 @@ public class MainActivity extends ListActivity {
         });
     }
 
-    public void addfriend(String id,String name){
+    /**
+     * Add friend to your directory when you click add friend.
+     *
+     * @param id,name id and name of your friend
+     */
+    public void addfriend(String id, String name) {
         this.mCallNumET.dismissDropDown();
         int result = 0;
         try {
@@ -484,64 +513,52 @@ public class MainActivity extends ListActivity {
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
-        if (result!=0){
-            HistoryItem x = new HistoryItem(id,name, "online");
+        if (result != 0) {
+            HistoryItem x = new HistoryItem(id, name, "online");
             arrayOfUsers.add(x);
             mHistoryAdapter.notifyDataSetChanged();
-        }else{
+        } else {
             showToast("error occured");
         }
     }
 
-    private void checkFriendStatus(){
+    /**
+     * Check status of your friend whether online or offline.
+     *
+     * @param none
+     */
+    private void checkFriendStatus() {
         int checkChange = 0;
         for (HistoryItem user : arrayOfUsers) {
             String status;
-            try{
+            try {
                 try {
                     status = new RetrieveStatusTask().execute(user.getUserId()).get();
-                    if(status != null && !status.isEmpty() && !status.equals(user.getStatus())){
+                    if (status != null && !status.isEmpty() && !status.equals(user.getStatus())) {
                         user.setStatus(status);
                         checkChange = 1;
                     }
                 } catch (ExecutionException e) {
                     e.printStackTrace();
                 }
-            } catch(InterruptedException e) {
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
 
         }
-        if (checkChange!=0){
+        if (checkChange != 0) {
             mHistoryAdapter.notifyDataSetChanged();
         }
     }
 
-    public void startHandler()
-    {
-        handler.postDelayed(new Runnable()
-        {
+    public void startHandler() {
+        handler.postDelayed(new Runnable() {
 
             @Override
-            public void run()
-            {
+            public void run() {
                 checkFriendStatus();
                 handler.postDelayed(this, 10000);
             }
         }, 10000);
     }
-
-    /**
-     * Log out, remove username from SharedPreferences, unsubscribe from PubNub, and send user back
-     *   to the LoginActivity
-     */
-//    public void signOut(){
-//        this.mPubNub.unsubscribeAll();
-//        SharedPreferences.Editor edit = this.mSharedPreferences.edit();
-//        edit.remove(Constants.USER_NAME);
-//        edit.apply();
-//        Intent intent = new Intent(this, LoginActivity.class);
-//        intent.putExtra("oldUsername", this.username);
-//        startActivity(intent);
-//    }
 }

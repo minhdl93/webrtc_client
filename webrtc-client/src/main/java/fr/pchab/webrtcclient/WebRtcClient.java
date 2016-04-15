@@ -44,12 +44,14 @@ public class WebRtcClient {
     /**
      * Implement this interface to be notified of events.
      */
-    public interface RtcListener{
+    public interface RtcListener {
         void onCallReady(String callId);
+
+        void onAcceptCall(String callId);
 
         void onStatusChanged(String newStatus);
 
-        void receiveMessage(String id,String msg);
+        void receiveMessage(String id, String msg);
 
         void onLocalStream(MediaStream localStream);
 
@@ -57,40 +59,39 @@ public class WebRtcClient {
 
         void onRemoveRemoteStream(int endPoint);
 
+        void onReceiveCall(String id);
     }
 
-    private interface Command{
+    private interface Command {
         void execute(String peerId, JSONObject payload) throws JSONException;
     }
 
     /**
-     *  create an offer and send it to the server
-     *
-     *  If you are the one initiating the call,
-     *  you would use navigator.getUserMedia() to get a video stream, then add the stream to the RTCPeerConnection
-     *  create and send offer to the server
-     *
+     * create an offer and send it to the server
+     * <p/>
+     * If you are the one initiating the call,
+     * you would use navigator.getUserMedia() to get a video stream, then add the stream to the RTCPeerConnection
+     * create and send offer to the server
      */
-    private class CreateOfferCommand implements Command{
+    private class CreateOfferCommand implements Command {
         public void execute(String peerId, JSONObject payload) throws JSONException {
-            Log.d(TAG,"CreateOfferCommand");
+            Log.d(TAG, "CreateOfferCommand");
             Peer peer = peers.get(peerId);
             peer.pc.createOffer(peer, pcConstraints);
         }
     }
 
     /**
-     *  create an answer and send it to the server
-     *
-     *  On the opposite end, the friend will receive the offer from the server
-     *  Once the offer arrives, navigator.getUserMedia() is once again used to create the stream
-     *  An RTCSessionDescription object is created and set up as the remote description by calling
-     *  Then an answer is created using RTCPeerConnection.createAnswer() and sent back to the server, which forwards it to the caller.
-     *
+     * create an answer and send it to the server
+     * <p/>
+     * On the opposite end, the friend will receive the offer from the server
+     * Once the offer arrives, navigator.getUserMedia() is once again used to create the stream
+     * An RTCSessionDescription object is created and set up as the remote description by calling
+     * Then an answer is created using RTCPeerConnection.createAnswer() and sent back to the server, which forwards it to the caller.
      */
-    private class CreateAnswerCommand implements Command{
+    private class CreateAnswerCommand implements Command {
         public void execute(String peerId, JSONObject payload) throws JSONException {
-            Log.d(TAG,"CreateAnswerCommand");
+            Log.d(TAG, "CreateAnswerCommand");
             Peer peer = peers.get(peerId);
             SessionDescription sdp = new SessionDescription(
                     SessionDescription.Type.fromCanonicalForm(payload.getString("type")),
@@ -101,9 +102,9 @@ public class WebRtcClient {
         }
     }
 
-    private class SetRemoteSDPCommand implements Command{
+    private class SetRemoteSDPCommand implements Command {
         public void execute(String peerId, JSONObject payload) throws JSONException {
-            Log.d(TAG,"SetRemoteSDPCommand");
+            Log.d(TAG, "SetRemoteSDPCommand");
             Peer peer = peers.get(peerId);
             SessionDescription sdp = new SessionDescription(
                     SessionDescription.Type.fromCanonicalForm(payload.getString("type")),
@@ -113,9 +114,9 @@ public class WebRtcClient {
         }
     }
 
-    private class AddIceCandidateCommand implements Command{
+    private class AddIceCandidateCommand implements Command {
         public void execute(String peerId, JSONObject payload) throws JSONException {
-            Log.d(TAG,"AddIceCandidateCommand");
+            Log.d(TAG, "AddIceCandidateCommand");
             PeerConnection pc = peers.get(peerId).pc;
             if (pc.getRemoteDescription() != null) {
                 IceCandidate candidate = new IceCandidate(
@@ -131,8 +132,8 @@ public class WebRtcClient {
     /**
      * Send a message through the signaling server
      *
-     * @param to id of recipient
-     * @param type type of message
+     * @param to      id of recipient
+     * @param type    type of message
      * @param payload payload of message
      * @throws JSONException
      */
@@ -141,21 +142,8 @@ public class WebRtcClient {
         message.put("to", to);
         message.put("type", type);
         message.put("payload", payload);
-        //Log.d("minmin",to+" "+" "+type+" "+payload);
         client.emit("message", message);
-    }
 
-//    public void sendOther(String to, String type, JSONObject payload) throws JSONException {
-//        JSONObject message = new JSONObject();
-//        message.put("to", to);
-//        message.put("type", type);
-//        message.put("payload", payload);
-//        //Log.d("minmin",to+" "+" "+type+" "+payload);
-//        client.emit("receiveCall", message);
-//    }
-
-    public void sendConnected() throws JSONException {
-        client.emit("chat connected", "ok");
     }
 
     private class MessageHandler {
@@ -177,15 +165,15 @@ public class WebRtcClient {
                     String from = data.getString("from");
                     String type = data.getString("type");
                     JSONObject payload = null;
-                    Log.d("minhhere ",from+" "+type);
-                    if(!type.equals("init")) {
+                    Log.d("minhhere ", from + " " + type);
+                    if (!type.equals("init")) {
                         payload = data.getJSONObject("payload");
                     }
                     // if peer is unknown, try to add him
-                    if(!peers.containsKey(from)) {
+                    if (!peers.containsKey(from)) {
                         // if MAX_PEER is reach, ignore the call
                         int endPoint = findEndPoint();
-                        if(endPoint != MAX_PEER) {
+                        if (endPoint != MAX_PEER) {
                             Peer peer = addPeer(from, endPoint);
                             peer.pc.addStream(localMS);
                             commandMap.get(type).execute(from, payload);
@@ -199,35 +187,24 @@ public class WebRtcClient {
             }
         };
 
-        private Emitter.Listener onReceiveCall = new Emitter.Listener() {
+        private Emitter.Listener onEject = new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-                Log.d("minh","text");
+                android.os.Process.killProcess(android.os.Process.myPid());
+            }
+        };
+
+        private Emitter.Listener onAccept = new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
                 JSONObject data = (JSONObject) args[0];
                 try {
-                    String from = data.getString("from");
-                    String type = data.getString("type");
-                    JSONObject payload = null;
-                    if(!type.equals("init")) {
-                        payload = data.getJSONObject("payload");
-                    }
-                    // if peer is unknown, try to add him
-
-                    if(!peers.containsKey(from)) {
-                        // if MAX_PEER is reach, ignore the call
-                        int endPoint = findEndPoint();
-                        if(endPoint != MAX_PEER) {
-                            Log.d("minh peer ",from);
-                            Peer peer = addPeer(from, endPoint);
-                            peer.pc.addStream(localMS);
-                            commandMap.get(type).execute(from, payload);
-                        }
-                    } else {
-                        commandMap.get(type).execute(from, payload);
-                    }
+                    String from = data.getString("myId");
+                    mListener.onAcceptCall(from);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+
             }
         };
 
@@ -250,13 +227,13 @@ public class WebRtcClient {
                     String msg = obj.getString("msg");
                     mListener.receiveMessage(id, msg);
 
-                } catch (JSONException e){
+                } catch (JSONException e) {
                 }
             }
         };
     }
 
-    private class Peer implements SdpObserver, PeerConnection.Observer{
+    private class Peer implements SdpObserver, PeerConnection.Observer {
         private PeerConnection pc;
         private String id;
         private int endPoint;
@@ -276,27 +253,32 @@ public class WebRtcClient {
         }
 
         @Override
-        public void onSetSuccess() {}
+        public void onSetSuccess() {
+        }
 
         @Override
-        public void onCreateFailure(String s) {}
+        public void onCreateFailure(String s) {
+        }
 
         @Override
-        public void onSetFailure(String s) {}
+        public void onSetFailure(String s) {
+        }
 
         @Override
-        public void onSignalingChange(PeerConnection.SignalingState signalingState) {}
+        public void onSignalingChange(PeerConnection.SignalingState signalingState) {
+        }
 
         @Override
         public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-            if(iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED) {
+            if (iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED) {
                 removePeer(id);
                 mListener.onStatusChanged("DISCONNECTED");
             }
         }
 
         @Override
-        public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {}
+        public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
+        }
 
         @Override
         public void onIceCandidate(final IceCandidate candidate) {
@@ -313,19 +295,20 @@ public class WebRtcClient {
 
         @Override
         public void onAddStream(MediaStream mediaStream) {
-            Log.d(TAG,"onAddStream "+mediaStream.label());
+            Log.d(TAG, "onAddStream " + mediaStream.label());
             // remote streams are displayed from 1 to MAX_PEER (0 is localStream)
-            mListener.onAddRemoteStream(mediaStream, endPoint+1);
+            mListener.onAddRemoteStream(mediaStream, endPoint + 1);
         }
 
         @Override
         public void onRemoveStream(MediaStream mediaStream) {
-            Log.d(TAG,"onRemoveStream "+mediaStream.label());
+            Log.d(TAG, "onRemoveStream " + mediaStream.label());
             removePeer(id);
         }
 
         @Override
-        public void onDataChannel(DataChannel dataChannel) {}
+        public void onDataChannel(DataChannel dataChannel) {
+        }
 
         @Override
         public void onRenegotiationNeeded() {
@@ -333,7 +316,7 @@ public class WebRtcClient {
         }
 
         public Peer(String id, int endPoint) {
-            Log.d("anhminh","new Peer: "+id + " " + endPoint);
+            Log.d("anhminh", "new Peer: " + id + " " + endPoint);
             this.pc = factory.createPeerConnection(iceServers, pcConstraints, this);
             this.id = id;
             this.endPoint = endPoint;
@@ -360,7 +343,7 @@ public class WebRtcClient {
         endPoints[peer.endPoint] = false;
     }
 
-    public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params, EGLContext mEGLcontext,String myId) {
+    public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params, EGLContext mEGLcontext, String myId) {
         mListener = listener;
         pcParams = params;
         this.myId = myId;
@@ -376,10 +359,9 @@ public class WebRtcClient {
         }
         client.on("id", messageHandler.onId);
         client.on("message", messageHandler.onMessage);
-        //client.on("receiveCall", messageHandler.onReceiveCall);
         client.on("chat", messageHandler.onChat);
-
-        //add third kind of message such as chat.
+        client.on("ejectcall", messageHandler.onEject);
+        client.on("acceptcall", messageHandler.onAccept);
 
         client.connect();
         try {
@@ -401,14 +383,14 @@ public class WebRtcClient {
      * Call this method in Activity.onPause()
      */
     public void onPause() {
-        if(videoSource != null) videoSource.stop();
+        if (videoSource != null) videoSource.stop();
     }
 
     /**
      * Call this method in Activity.onResume()
      */
     public void onResume() {
-        if(videoSource != null) videoSource.restart();
+        if (videoSource != null) videoSource.restart();
     }
 
     /**
@@ -426,23 +408,22 @@ public class WebRtcClient {
 
     public void stopVideo() {
         videoSource.stop();
-        client.emit("register", "ok");
     }
 
     private int findEndPoint() {
-        for(int i = 0; i < MAX_PEER; i++) if (!endPoints[i]) return i;
+        for (int i = 0; i < MAX_PEER; i++) if (!endPoints[i]) return i;
         return MAX_PEER;
     }
 
     /**
      * Start the client.
-     *
+     * <p/>
      * Set up the local stream and notify the signaling server.
      * Call this method after onCallReady.
      *
      * @param name client name
      */
-    public void start(String name){
+    public void start(String name) {
         setCamera();
         try {
             JSONObject message = new JSONObject();
@@ -453,17 +434,26 @@ public class WebRtcClient {
         }
     }
 
-    public void transmitChat(JSONObject message){
+    public void transmitChat(JSONObject message) {
         client.emit("chat", message);
     }
 
-    public String client_id(){
+    public String client_id() {
         return client.id();
     }
 
-    private void setCamera(){
+    public void startClient(String to, String type, JSONObject payload) throws JSONException {
+        Log.d("minhminh", "vao ham moi tao");
+        JSONObject message = new JSONObject();
+        message.put("to", to);
+        message.put("type", type);
+        message.put("payload", payload);
+        client.emit("startclient", message);
+    }
+
+    private void setCamera() {
         localMS = factory.createLocalMediaStream("ARDAMS");
-        if(pcParams.videoCallEnabled){
+        if (pcParams.videoCallEnabled) {
             MediaConstraints videoConstraints = new MediaConstraints();
             videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(pcParams.videoHeight)));
             videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(pcParams.videoWidth)));
