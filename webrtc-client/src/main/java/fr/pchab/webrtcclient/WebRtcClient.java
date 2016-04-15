@@ -56,6 +56,7 @@ public class WebRtcClient {
         void onAddRemoteStream(MediaStream remoteStream, int endPoint);
 
         void onRemoveRemoteStream(int endPoint);
+
     }
 
     private interface Command{
@@ -144,14 +145,14 @@ public class WebRtcClient {
         client.emit("message", message);
     }
 
-    public void sendOther(String to, String type, JSONObject payload) throws JSONException {
-        JSONObject message = new JSONObject();
-        message.put("to", to);
-        message.put("type", type);
-        message.put("payload", payload);
-        //Log.d("minmin",to+" "+" "+type+" "+payload);
-        client.emit("receiveCall", message);
-    }
+//    public void sendOther(String to, String type, JSONObject payload) throws JSONException {
+//        JSONObject message = new JSONObject();
+//        message.put("to", to);
+//        message.put("type", type);
+//        message.put("payload", payload);
+//        //Log.d("minmin",to+" "+" "+type+" "+payload);
+//        client.emit("receiveCall", message);
+//    }
 
     public void sendConnected() throws JSONException {
         client.emit("chat connected", "ok");

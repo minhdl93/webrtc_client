@@ -59,7 +59,8 @@
             android:name=".RegisterActivity"
             android:label="@string/title_activity_register"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-        <activity android:name=".MainActivity"></activity>
+        <activity android:name=".MainActivity" />
+        <activity android:name=".IncomingCallActivity"></activity>
     </application>
 
 </manifest>

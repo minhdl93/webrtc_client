@@ -14,6 +14,8 @@
     <string name="prompt_name">Name</string>
     <string name="prompt_phone">Phone</string>
     <string name="action_back_login">Back to login</string>
+    <string name="incoming_call">Incoming Call&#8230;</string>
+    <string name="incoming_call_from">Kevin Gleason</string>
     <string name="action_sign_in_short">Chat Video</string>
     <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">This password is too short</string>

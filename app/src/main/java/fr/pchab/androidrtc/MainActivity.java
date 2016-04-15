@@ -115,26 +115,26 @@ public class MainActivity extends ListActivity {
             throw new RuntimeException(e);
         }
         try{
-        JSONArray jsonarr = new JSONArray(json_friend);
-        for (int i = 0; i < jsonarr.length(); i++) {
-            JSONObject jsonobj = jsonarr.getJSONObject(i);
-            String id = jsonobj.getString("friend_id");
-            String name = "";
-            String status = "";
-            try{
-                try {
-                    status = new RetrieveStatusTask().execute(id).get();
-                    name= new RetrieveName().execute(id).get();
+            JSONArray jsonarr = new JSONArray(json_friend);
+            for (int i = 0; i < jsonarr.length(); i++) {
+                JSONObject jsonobj = jsonarr.getJSONObject(i);
+                String id = jsonobj.getString("friend_id");
+                String name = "";
+                String status = "";
+                try{
+                    try {
+                        status = new RetrieveStatusTask().execute(id).get();
+                        name= new RetrieveName().execute(id).get();
 
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                } catch(InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-            } catch(InterruptedException e) {
-                throw new RuntimeException(e);
+                HistoryItem x = new HistoryItem(id,name, status);
+                arrayOfUsers.add(x);
             }
-            HistoryItem x = new HistoryItem(id,name, status);
-            arrayOfUsers.add(x);
-        }
         }catch (Exception e) {
         }
 

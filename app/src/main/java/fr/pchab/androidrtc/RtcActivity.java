@@ -111,7 +111,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
 
 
 
-            Log.d("minh final","function end here");
+        Log.d("minh final","function end here");
 
 //        final String action = intent.getAction();
 //
@@ -251,6 +251,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     @Override
     public void onCallReady(String callId) {
         this.username      = client.client_id();
+        Log.d("minh", this.username);
         if (number != null) {
             try {
                 answer(number);
