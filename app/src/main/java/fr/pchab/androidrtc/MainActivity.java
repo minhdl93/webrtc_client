@@ -70,6 +70,7 @@ public class MainActivity extends ListActivity {
         }
         this.userId = this.mSharedPreferences.getString("USER_ID", "");
         this.userName = this.mSharedPreferences.getString("USER_NAME", "");
+        //Log.d("shitshit",this.userName);
 
 
         this.mHistoryList = getListView();
@@ -192,6 +193,7 @@ public class MainActivity extends ListActivity {
                 intent.putExtra("CALLER_ID", from);
                 intent.putExtra("USER_ID", userId);
                 intent.putExtra("CALLER_NAME", "Lien Minh");
+                intent.putExtra("USER_NAME",userName);
                 startActivity(intent);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -461,6 +463,8 @@ public class MainActivity extends ListActivity {
         if (status.equals("Offline")){
             showToast("Your friend is offline. Please call again later!");
         }else{
+            //remove callback check status every 10
+            handler.removeCallbacksAndMessages(null);
             dispatchCall(callNum);
         }
     }
@@ -479,6 +483,7 @@ public class MainActivity extends ListActivity {
     public void dispatchCall(final String callNum) {
         Intent intent = new Intent(MainActivity.this, RtcActivity.class);
         intent.putExtra("id", this.userId);
+        intent.putExtra("name", this.userName);
         intent.putExtra("number", callNum);
         startActivity(intent);
     }
@@ -534,6 +539,7 @@ public class MainActivity extends ListActivity {
             try {
                 try {
                     status = new RetrieveStatusTask().execute(user.getUserId()).get();
+                    Log.d("minhlog","come here handler status old: " + user.getStatus()+ "stayts new "+status);
                     if (status != null && !status.isEmpty() && !status.equals(user.getStatus())) {
                         user.setStatus(status);
                         checkChange = 1;

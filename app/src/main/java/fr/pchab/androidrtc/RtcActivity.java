@@ -29,7 +29,7 @@ import fr.pchab.webrtcclient.WebRtcClient;
 
 public class RtcActivity extends ListActivity implements WebRtcClient.RtcListener {
     private final static int VIDEO_CALL_SENT = 666;
-    private static final String VIDEO_CODEC_VP9 = "VP9";
+    private static final String VIDEO_CODEC_VP9 = "VP8";
     private static final String AUDIO_CODEC_OPUS = "opus";
     // Local preview screen position before call is connected.
     private static final int LOCAL_X_CONNECTING = 0;
@@ -52,7 +52,6 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     private VideoRenderer.Callbacks remoteRender;
     private WebRtcClient client;
     private String mSocketAddress;
-    private String callerId;
     private EditText mChatEditText;
     private String username;
     private ListView mChatList;
@@ -91,6 +90,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
         if (extras != null) {
             myId = extras.getString("id");
             number = extras.getString("number");
+            username = extras.getString("name");
         }
         VideoRendererGui.setView(vsv, new Runnable() {
             @Override
@@ -132,12 +132,13 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     public void sendMessage(View view) {
         String message = mChatEditText.getText().toString();
         if (message.equals("")) return; // Return if empty
-        ChatMessage chatMsg = new ChatMessage(this.username, message, System.currentTimeMillis());
+        ChatMessage chatMsg = new ChatMessage(username, message, System.currentTimeMillis());
         mChatAdapter.addMessage(chatMsg);
 
         //Data is being sent under JSON object
         JSONObject messageJSON = new JSONObject();
         try {
+            //Log.d("minhchat ",this.username+"/"+myId+"/"+number);
             messageJSON.put("user_id", chatMsg.getSender());
             messageJSON.put("msg", chatMsg.getMessage());
             messageJSON.put("time", chatMsg.getTimeStamp());
@@ -233,7 +234,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
      */
     @Override
     public void onCallReady(String callId) {
-        this.username = client.client_id();
+       // this.username = client.client_id();
         if (number != null) {
             try {
                 client.startClient(number, "init", null);
@@ -338,7 +339,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
         VideoRendererGui.update(localRender,
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
-                scalingType);
+                scalingType,false);
     }
 
     /**
@@ -351,11 +352,11 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
         remoteStream.videoTracks.get(0).addRenderer(new VideoRenderer(remoteRender));
         VideoRendererGui.update(remoteRender,
                 REMOTE_X, REMOTE_Y,
-                REMOTE_WIDTH, REMOTE_HEIGHT, scalingType);
+                REMOTE_WIDTH, REMOTE_HEIGHT, scalingType,false);
         VideoRendererGui.update(localRender,
                 LOCAL_X_CONNECTED, LOCAL_Y_CONNECTED,
                 LOCAL_WIDTH_CONNECTED, LOCAL_HEIGHT_CONNECTED,
-                scalingType);
+                scalingType,false);
     }
 
     @Override
@@ -373,7 +374,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
         VideoRendererGui.update(localRender,
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
-                scalingType);
+                scalingType,false);
     }
 
 }

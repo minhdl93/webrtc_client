@@ -1,6 +1,7 @@
 package fr.pchab.androidrtc.Adapter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -65,6 +66,11 @@ public class HistoryAdapter extends ArrayAdapter<HistoryItem> {
         }
         holder.user.setText(hItem.getUserName());
         holder.id.setText(hItem.getUserId());
+        if(hItem.getStatus().equals("Online")){
+            holder.status.setTextColor(Color.GREEN);
+        }else{
+            holder.status.setTextColor(Color.RED);
+        }
         holder.status.setText(hItem.getStatus());
         holder.callBtn.setOnClickListener(new View.OnClickListener() {
             @Override

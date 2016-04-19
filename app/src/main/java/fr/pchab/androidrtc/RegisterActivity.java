@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -55,7 +56,7 @@ public class RegisterActivity extends AppCompatActivity {
         mEmailView = (EditText) findViewById(R.id.email);
         mRegisterFormView = findViewById(R.id.register_form);
         mProgressView = findViewById(R.id.register_progress);
-        Button mSignInButton = (Button) findViewById(R.id.login_button);
+        TextView mSignInButton = (TextView) findViewById(R.id.login_button);
         mSignInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

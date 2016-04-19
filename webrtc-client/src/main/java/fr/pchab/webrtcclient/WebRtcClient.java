@@ -277,6 +277,11 @@ public class WebRtcClient {
         }
 
         @Override
+        public void onIceConnectionReceivingChange(boolean b) {
+
+        }
+
+        @Override
         public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
         }
 

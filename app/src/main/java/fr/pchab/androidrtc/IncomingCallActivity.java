@@ -18,6 +18,7 @@ import java.net.URISyntaxException;
 public class IncomingCallActivity extends AppCompatActivity {
     private String callerName;
     private TextView mCallerID;
+    private String userName;
     private String userId;
     private Socket client;
     private String callerId;
@@ -30,6 +31,7 @@ public class IncomingCallActivity extends AppCompatActivity {
         callerId = extras.getString("CALLER_ID");
         userId = extras.getString("USER_ID");
         callerName = extras.getString("CALLER_NAME");
+        userName= extras.getString("USER_NAME");
 
 
         this.mCallerID = (TextView) findViewById(R.id.caller_id);
@@ -53,6 +55,7 @@ public class IncomingCallActivity extends AppCompatActivity {
         finish();
         Intent intent = new Intent(IncomingCallActivity.this, RtcActivity.class);
         intent.putExtra("id", this.userId);
+        intent.putExtra("name",this.userName);
         startActivity(intent);
         String host = "http://" + getResources().getString(R.string.host);
         host += (":" + getResources().getString(R.string.port) + "/");

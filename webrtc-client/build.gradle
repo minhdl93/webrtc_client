@@ -21,5 +21,5 @@ android {
 
 dependencies {
     compile 'com.github.nkzawa:socket.io-client:0.4.2'
-    compile 'io.pristine:libjingle:8871@aar'
+    compile 'io.pristine:libjingle:9638@aar'
 }
