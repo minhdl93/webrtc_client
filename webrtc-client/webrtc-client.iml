@@ -82,7 +82,7 @@
     <orderEntry type="jdk" jdkName="Android API 22 Platform (1)" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="Java-WebSocket-1.3.0" level="project" />
-    <orderEntry type="library" exported="" name="libjingle-9638" level="project" />
+    <orderEntry type="library" exported="" name="libjingle-11139" level="project" />
     <orderEntry type="library" exported="" name="engine.io-client-0.4.1" level="project" />
     <orderEntry type="library" exported="" name="socket.io-client-0.4.2" level="project" />
   </component>

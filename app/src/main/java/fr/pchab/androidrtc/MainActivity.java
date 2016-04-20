@@ -3,6 +3,7 @@ package fr.pchab.androidrtc;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -467,6 +468,30 @@ public class MainActivity extends ListActivity {
             handler.removeCallbacksAndMessages(null);
             dispatchCall(callNum);
         }
+    }
+
+    /**
+     * Take the user to a video screen. USER_NAME is a required field.
+     *
+     * @param id button that is clicked to trigger toVideo
+     */
+    public void makeBrowserCall(String id, String status) {
+        String callNum = id;
+//        if (callNum.isEmpty() || callNum.equals(this.userId)) {
+//            showToast("Enter a valid user ID to call.");
+//            return;
+//        }
+//        if (status.equals("Offline")){
+//            showToast("Your friend is offline. Please call again later!");
+//        }else{
+            //remove callback check status every 10
+            handler.removeCallbacksAndMessages(null);
+            //dispatchCall(callNum);
+            String url = "http://192.168.1.17:3000/"+callNum;
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse(url));
+            startActivity(i);
+        //}
     }
 
     /**

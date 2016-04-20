@@ -46,6 +46,7 @@ public class HistoryAdapter extends ArrayAdapter<HistoryItem> {
         TextView status;
         TextView id;
         ImageButton callBtn;
+        ImageButton browserBtn;
         HistoryItem histItem;
     }
 
@@ -60,6 +61,7 @@ public class HistoryAdapter extends ArrayAdapter<HistoryItem> {
             holder.status = (TextView) convertView.findViewById(R.id.history_status);
             holder.id = (TextView) convertView.findViewById(R.id.history_time);
             holder.callBtn = (ImageButton) convertView.findViewById(R.id.history_call);
+            holder.browserBtn = (ImageButton) convertView.findViewById(R.id.history_call_browser);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -75,7 +77,13 @@ public class HistoryAdapter extends ArrayAdapter<HistoryItem> {
         holder.callBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((MainActivity) v.getContext()).makeCall(holder.id.getText().toString(),holder.status.getText().toString());
+                ((MainActivity) v.getContext()).makeCall(holder.id.getText().toString(), holder.status.getText().toString());
+            }
+        });
+        holder.browserBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((MainActivity) v.getContext()).makeBrowserCall(holder.id.getText().toString(), holder.status.getText().toString());
             }
         });
         holder.histItem = hItem;

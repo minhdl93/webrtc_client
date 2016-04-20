@@ -51,20 +51,32 @@
 
         </LinearLayout>
 
+            <ImageButton
+                android:id="@+id/history_call_browser"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/round_button_send"
+                android:padding="10dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/browser" />
 
-        <ImageButton
-            android:id="@+id/history_call"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:background="@drawable/round_button_send"
-            android:padding="10dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_action_call" />
+            <ImageButton
+                android:id="@+id/history_call"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@drawable/round_button_send"
+                android:padding="10dp"
+                android:layout_marginLeft="10dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_action_call"
+                android:layout_alignTop="@+id/history_call_browser"
+                android:layout_toLeftOf="@+id/history_call_browser"
+                android:layout_toStartOf="@+id/history_call_browser" />
+        </RelativeLayout>
 
-    </RelativeLayout>
 
 
 </LinearLayout>

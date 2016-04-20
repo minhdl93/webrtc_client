@@ -1,6 +1,6 @@
 package fr.pchab.webrtcclient;
 
-import android.opengl.EGLContext;
+import android.hardware.Camera;
 import android.util.Log;
 
 import com.github.nkzawa.emitter.Emitter;
@@ -194,6 +194,14 @@ public class WebRtcClient {
             }
         };
 
+        private Emitter.Listener onRemoveCall = new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                Log.d("minhhangup","test");
+                android.os.Process.killProcess(android.os.Process.myPid());
+            }
+        };
+
         private Emitter.Listener onAccept = new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -270,10 +278,11 @@ public class WebRtcClient {
 
         @Override
         public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-            if (iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED) {
-                removePeer(id);
-                mListener.onStatusChanged("DISCONNECTED");
-            }
+            Log.d("minhfinal","ice conenction change "+iceConnectionState);
+//            if (iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED) {
+//                removePeer(id);
+//                mListener.onStatusChanged("DISCONNECTED");
+//            }
         }
 
         @Override
@@ -340,7 +349,7 @@ public class WebRtcClient {
         return peer;
     }
 
-    private void removePeer(String id) {
+    public void removePeer(String id) {
         Peer peer = peers.get(id);
         mListener.onRemoveRemoteStream(peer.endPoint);
         peer.pc.close();
@@ -348,12 +357,12 @@ public class WebRtcClient {
         endPoints[peer.endPoint] = false;
     }
 
-    public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params, EGLContext mEGLcontext, String myId) {
+    public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params, String myId) {
         mListener = listener;
         pcParams = params;
         this.myId = myId;
         PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
-                params.videoCodecHwAcceleration, mEGLcontext);
+                params.videoCodecHwAcceleration);
         factory = new PeerConnectionFactory();
         MessageHandler messageHandler = new MessageHandler();
 
@@ -367,7 +376,7 @@ public class WebRtcClient {
         client.on("chat", messageHandler.onChat);
         client.on("ejectcall", messageHandler.onEject);
         client.on("acceptcall", messageHandler.onAccept);
-
+        client.on("removeVideo", messageHandler.onRemoveCall);
         client.connect();
         try {
             JSONObject message = new JSONObject();
@@ -376,9 +385,9 @@ public class WebRtcClient {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121"));
-        iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
-
+//        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121:3478"));
+//        iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
+//        iceServers.add(new PeerConnection.IceServer("stun:stun1.l.google.com:19302"));
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
         pcConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
@@ -443,6 +452,12 @@ public class WebRtcClient {
         client.emit("chat", message);
     }
 
+    public void removeVideo(String otherID) throws JSONException{
+        JSONObject message = new JSONObject();
+        message.put("other", otherID);
+        client.emit("removeVideo", message);
+    }
+
     public String client_id() {
         return client.id();
     }
@@ -476,7 +491,26 @@ public class WebRtcClient {
     }
 
     private VideoCapturer getVideoCapturer() {
-        String frontCameraDeviceName = VideoCapturerAndroid.getNameOfFrontFacingDevice();
+        String frontCameraDeviceName = getNameOfFrontFacingDevice();
         return VideoCapturerAndroid.create(frontCameraDeviceName);
+    }
+
+    public static String getNameOfFrontFacingDevice() {
+        for (int i = 0; i < Camera.getNumberOfCameras(); ++i) {
+            Camera.CameraInfo info = new Camera.CameraInfo();
+            Camera.getCameraInfo(i, info);
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT)
+                return getDeviceName(i);
+        }
+        throw new RuntimeException("Front facing camera does not exist.");
+    }
+
+    public static String getDeviceName(int index) {
+        Camera.CameraInfo info = new Camera.CameraInfo();
+        Camera.getCameraInfo(index, info);
+        String facing =
+                (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) ? "front" : "back";
+        return "Camera " + index + ", Facing " + facing
+                + ", Orientation " + info.orientation;
     }
 }

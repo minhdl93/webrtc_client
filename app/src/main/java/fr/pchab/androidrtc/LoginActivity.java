@@ -348,8 +348,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         .setMessage("User name or/and password is not correct!")
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                mEmailView.setText("");
-                                mPasswordView.setText("");
+//                                mEmailView.setText("");
+//                                mPasswordView.setText("");
                             }
                         })
                         .setIcon(android.R.drawable.ic_dialog_alert)
