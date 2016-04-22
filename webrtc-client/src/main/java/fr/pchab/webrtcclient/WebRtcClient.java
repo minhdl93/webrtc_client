@@ -234,7 +234,6 @@ public class WebRtcClient {
                     String id = obj.getString("user_id");
                     String msg = obj.getString("msg");
                     mListener.receiveMessage(id, msg);
-
                 } catch (JSONException e) {
                 }
             }

@@ -1,11 +1,17 @@
 package fr.pchab.androidrtc;
 
+import android.app.ActivityManager;
 import android.app.ListActivity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
+import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager.LayoutParams;
@@ -30,7 +36,6 @@ import fr.pchab.webrtcclient.PeerConnectionParameters;
 import fr.pchab.webrtcclient.WebRtcClient;
 
 public class RtcActivity extends ListActivity implements WebRtcClient.RtcListener {
-    private final static int VIDEO_CALL_SENT = 666;
     private static final String VIDEO_CODEC_VP9 = "VP8";
     private static final String AUDIO_CODEC_OPUS = "opus";
     // Local preview screen position before call is connected.
@@ -59,7 +64,8 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     private ListView mChatList;
     private ChatAdapter mChatAdapter;
     private String myId;
-    private String number;
+    private String number="";
+    private String callerIdChat="";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -93,6 +99,8 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
         if (extras != null) {
             myId = extras.getString("id");
             number = extras.getString("number");
+            callerIdChat = extras.getString("callerIdChat");
+            //Log.d("minthestfinal","chet ngay day "+number+" ./" +callerIdChat);
             username = extras.getString("name");
         }
         VideoRendererGui.setView(vsv, new Runnable() {
@@ -141,7 +149,15 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
         //Data is being sent under JSON object
         JSONObject messageJSON = new JSONObject();
         try {
-            //Log.d("minhchat ",this.username+"/"+myId+"/"+number);
+
+            if (number != "" && number != null){
+                //Log.d("minthestfinal","come first "+number);
+                messageJSON.put("to", number);
+            }else{
+                //Log.d("minthestfinal","come second "+callerIdChat);
+                messageJSON.put("to", callerIdChat);
+            }
+            //Log.d("minthestfinal","chet ngay day "+ );
             messageJSON.put("user_id", chatMsg.getSender());
             messageJSON.put("msg", chatMsg.getMessage());
             messageJSON.put("time", chatMsg.getTimeStamp());
@@ -167,15 +183,13 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
      * @param view the view that contain the button
      */
     public void hangup(View view) {
-        Log.d("minhhangup",number);
         if (client != null) {
             onDestroy();
-            Log.d("minhhangup",number);
-            try {
-                client.removeVideo(number);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                client.removeVideo(number);
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
 
         }
     }
@@ -284,9 +298,59 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
             public void run() {
                 ChatMessage chatMsg = new ChatMessage(id, msg, System.currentTimeMillis());
                 mChatAdapter.addMessage(chatMsg);
+                if(isAppIsInBackground(getBaseContext())){
+                    NotificationManager mManager;
+                    mManager = (NotificationManager) getApplicationContext()
+                            .getSystemService(
+                                    getApplicationContext().NOTIFICATION_SERVICE);
+                    Intent in = new Intent(getApplicationContext(),
+                            RtcActivity.class);
+                    Notification notification = new Notification(R.drawable.notification_template_icon_bg,
+                            "New message from "+id, System.currentTimeMillis());
+                    in.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP
+                            | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                    PendingIntent pendingNotificationIntent = PendingIntent.getActivity(
+                            getApplicationContext(), 0, in,
+                            PendingIntent.FLAG_UPDATE_CURRENT);
+                    notification.flags |= Notification.FLAG_AUTO_CANCEL;
+                    notification.setLatestEventInfo(getApplicationContext(),
+                            "New message", msg,
+                            pendingNotificationIntent);
+                    mManager.notify(0, notification);
+                }
             }
         });
+    }
 
+    /**
+     * Check application is in the backgroud or in foreground
+     *
+     * @param context  the id of the user sent the chat
+     */
+    private boolean isAppIsInBackground(Context context) {
+        boolean isInBackground = true;
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
+            List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
+            for (ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
+                if (processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                    for (String activeProcess : processInfo.pkgList) {
+                        if (activeProcess.equals(context.getPackageName())) {
+                            isInBackground = false;
+                        }
+                    }
+                }
+            }
+        } else {
+            List<ActivityManager.RunningTaskInfo> taskInfo = am.getRunningTasks(1);
+            ComponentName componentInfo = taskInfo.get(0).topActivity;
+            if (componentInfo.getPackageName().equals(context.getPackageName())) {
+                isInBackground = false;
+            }
+        }
+
+        return isInBackground;
     }
 
     /**
@@ -387,5 +451,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
                 scalingType,false);
     }
+
+
 
 }
