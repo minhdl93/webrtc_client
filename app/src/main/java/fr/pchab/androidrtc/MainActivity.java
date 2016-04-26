@@ -1,15 +1,25 @@
 package fr.pchab.androidrtc;
 
+import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.ListActivity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
+import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -185,22 +195,107 @@ public class MainActivity extends ListActivity {
     private Emitter.Listener onReceiveCall = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.d("minhfinal", "minh");
+            String from = "";
             JSONObject data = (JSONObject) args[0];
             try {
-                String from = data.getString("from");
+                from = data.getString("from");
                 client.close();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            if(isAppIsInBackground(getApplicationContext())){
+                NotificationManager mManager;
+                mManager = (NotificationManager) getApplicationContext()
+                        .getSystemService(
+                                getApplicationContext().NOTIFICATION_SERVICE);
+                Intent in = new Intent(getApplicationContext(),
+                        IncomingCallActivity.class);
+                in.putExtra("CALLER_ID", from);
+                in.putExtra("USER_ID", userId);
+                in.putExtra("CALLER_NAME", "Lien Minh");
+                in.putExtra("USER_NAME",userName);
+                Notification notification = new Notification(R.drawable.notification_template_icon_bg,
+                        "Demo video  ", System.currentTimeMillis());
+                //RemoteViews notificationView = new RemoteViews(getPackageName(),
+                //        R.layout.notification_incoming_call);
+                in.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+//                Intent receiveIntent = new Intent(getApplicationContext(), receiveButtonListener.class);
+//                PendingIntent pendingReceiveIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
+//                        receiveIntent, 0);
+//                notificationView.setOnClickPendingIntent(R.id.noti_receive,
+//                        pendingReceiveIntent);
+////                Intent rejectIntent = new Intent(getApplicationContext(), rejectButtonListener.class);
+////                PendingIntent pendingRejectIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
+////                        rejectIntent, 0);
+////                notificationView.setOnClickPendingIntent(R.id.noti_reject,
+////                                                                   pendingRejectIntent);
+
+                PendingIntent pendingNotificationIntent = PendingIntent.getActivity(
+                        getApplicationContext(), 0, in,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+                notification.flags |= Notification.FLAG_AUTO_CANCEL;
+                notification.setLatestEventInfo(getApplicationContext(),
+                        "Incoming phone", "You have a new phone ",
+                        pendingNotificationIntent);
+                //notification.contentView = notificationView;
+                notification.contentIntent = pendingNotificationIntent;
+                mManager.notify(0, notification);
+            }else{
                 Intent intent = new Intent(MainActivity.this, IncomingCallActivity.class);
                 intent.putExtra("CALLER_ID", from);
                 intent.putExtra("USER_ID", userId);
                 intent.putExtra("CALLER_NAME", "Lien Minh");
                 intent.putExtra("USER_NAME",userName);
                 startActivity(intent);
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
         }
     };
+
+    public static class receiveButtonListener extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d("minhtest","Receive call");
+        }
+    }
+
+    public static class rejectButtonListener extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d("minhtest","Reject call");
+        }
+    }
+
+    /**
+     * Check application is in the backgroud or in foreground
+     *
+     * @param context  the id of the user sent the chat
+     */
+    private boolean isAppIsInBackground(Context context) {
+        boolean isInBackground = true;
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
+            List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
+            for (ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
+                if (processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                    for (String activeProcess : processInfo.pkgList) {
+                        if (activeProcess.equals(context.getPackageName())) {
+                            isInBackground = false;
+                        }
+                    }
+                }
+            }
+        } else {
+            List<ActivityManager.RunningTaskInfo> taskInfo = am.getRunningTasks(1);
+            ComponentName componentInfo = taskInfo.get(0).topActivity;
+            if (componentInfo.getPackageName().equals(context.getPackageName())) {
+                isInBackground = false;
+            }
+        }
+
+        return isInBackground;
+    }
 
     /**
      * Task to get list of users.

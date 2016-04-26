@@ -5,6 +5,7 @@ import android.app.ListActivity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -18,6 +19,7 @@ import android.view.WindowManager.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -57,7 +59,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     private GLSurfaceView vsv;
     private VideoRenderer.Callbacks localRender;
     private VideoRenderer.Callbacks remoteRender;
-    private WebRtcClient client;
+    private static WebRtcClient client;
     private String mSocketAddress;
     private EditText mChatEditText;
     private String username;
@@ -100,7 +102,6 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
             myId = extras.getString("id");
             number = extras.getString("number");
             callerIdChat = extras.getString("callerIdChat");
-            //Log.d("minthestfinal","chet ngay day "+number+" ./" +callerIdChat);
             username = extras.getString("name");
         }
         VideoRendererGui.setView(vsv, new Runnable() {
@@ -215,11 +216,62 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     @Override
     public void onPause() {
         super.onPause();
-        vsv.onPause();
-        if (client != null) {
-            client.onPause();
+//        vsv.onPause();
+//        if (client != null) {
+//            client.onPause();
+//        }
+        if(isAppIsInBackground(getBaseContext())){
+            NotificationManager mManager;
+            mManager = (NotificationManager) getApplicationContext()
+                    .getSystemService(
+                            getApplicationContext().NOTIFICATION_SERVICE);
+            Intent in = new Intent(getApplicationContext(),
+                    RtcActivity.class);
+            Notification notification = new Notification(R.drawable.notification_template_icon_bg,
+                    "Demo video  ", System.currentTimeMillis());
+            RemoteViews notificationView = new RemoteViews(getPackageName(),
+                    R.layout.notification_video_calling);
+            in.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+            Intent hangIntent = new Intent(this, hangButtonListener.class);
+            PendingIntent pendingHangIntent = PendingIntent.getBroadcast(this, 0,
+                    hangIntent, 0);
+            notificationView.setOnClickPendingIntent(R.id.hang_up_noti,
+                    pendingHangIntent);
+            Intent stopIntent = new Intent(this, stopButtonListener.class);
+            PendingIntent pendingStopIntent = PendingIntent.getBroadcast(this, 0,
+                    stopIntent, 0);
+            notificationView.setOnClickPendingIntent(R.id.end_call_noti,pendingStopIntent
+                    );
+            PendingIntent pendingNotificationIntent = PendingIntent.getActivity(
+                    getApplicationContext(), 0, in,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+            notification.flags |= Notification.FLAG_AUTO_CANCEL;
+            notification.contentView = notificationView;
+            notification.contentIntent = pendingNotificationIntent;
+            mManager.notify(0, notification);
         }
     }
+
+    public static class hangButtonListener extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            client.stopVideo();
+        }
+    }
+
+    public static class stopButtonListener extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //client.onDestroy();
+            //android.os.Process.killProcess(android.os.Process.myPid());
+            Intent mainview =new Intent(context,MainActivity.class);
+            mainview.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(mainview);
+        }
+    }
+
 
     /**
      * Handle onResume event which is implement by RtcListener class
@@ -229,10 +281,10 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     @Override
     public void onResume() {
         super.onResume();
-        vsv.onResume();
-        if (client != null) {
-            client.onResume();
-        }
+//        vsv.onResume();
+//        if (client != null) {
+//            client.onResume();
+//        }
     }
 
     /**
@@ -451,7 +503,4 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
                 scalingType,false);
     }
-
-
-
 }
