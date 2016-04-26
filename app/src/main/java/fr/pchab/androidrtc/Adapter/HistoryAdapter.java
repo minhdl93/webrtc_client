@@ -80,12 +80,12 @@ public class HistoryAdapter extends ArrayAdapter<HistoryItem> {
                 ((MainActivity) v.getContext()).makeCall(holder.id.getText().toString(), holder.status.getText().toString());
             }
         });
-        holder.browserBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ((MainActivity) v.getContext()).makeBrowserCall(holder.id.getText().toString(), holder.status.getText().toString());
-            }
-        });
+//        holder.browserBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                ((MainActivity) v.getContext()).makeBrowserCall(holder.id.getText().toString(), holder.status.getText().toString());
+//            }
+//        });
         holder.histItem = hItem;
         return convertView;
     }

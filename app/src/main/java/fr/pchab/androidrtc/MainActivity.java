@@ -1,25 +1,21 @@
 package fr.pchab.androidrtc;
 
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ListActivity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
+import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
-import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,7 +55,7 @@ public class MainActivity extends ListActivity {
     private String userId;
     private ListView mHistoryList;
     private HistoryAdapter mHistoryAdapter;
-    private UserAdapter mUserAdapter;
+    private static UserAdapter mUserAdapter;
     private AutoCompleteTextView mCallNumET;
     private TextView mUsernameTV;
     public ArrayList<HistoryItem> arrayOfUsers;
@@ -81,48 +77,55 @@ public class MainActivity extends ListActivity {
         }
         this.userId = this.mSharedPreferences.getString("USER_ID", "");
         this.userName = this.mSharedPreferences.getString("USER_NAME", "");
-        //Log.d("shitshit",this.userName);
-
-
         this.mHistoryList = getListView();
         this.mCallNumET = (AutoCompleteTextView) findViewById(R.id.call_num);
         this.mUsernameTV = (TextView) findViewById(R.id.main_username);
-
         this.mUsernameTV.setText(this.userName);
 
-        //Add all user for searching and add friends
-        ArrayList<User> adapter = new ArrayList<User>();
-        String json_users = "";
-        try {
-            try {
-                json_users = new RetrieveUserTask().execute().get();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        mCallNumET.setOnFocusChangeListener(new AutoCompleteTextView.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    //Add all user for searching and add friends
+                    ArrayList<User> adapter = new ArrayList<User>();
+                    String json_users = "";
+                    try {
+                        try {
+                            json_users = new RetrieveUserTask().execute().get();
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
+                        }
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
 
 
-        try {
-            JSONArray jsonarr = new JSONArray(json_users);
-            for (int i = 0; i < jsonarr.length(); i++) {
-                JSONObject jsonobj = jsonarr.getJSONObject(i);
+                    try {
+                        JSONArray jsonarr = new JSONArray(json_users);
+                        for (int i = 0; i < jsonarr.length(); i++) {
+                            JSONObject jsonobj = jsonarr.getJSONObject(i);
 
-                String id = jsonobj.getString("id");
-                String name = jsonobj.getString("name");
-                if (!id.equals(userId)) {
-                    User x = new User(id, name);
-                    adapter.add(x);
+                            String id = jsonobj.getString("id");
+                            String name = jsonobj.getString("name");
+                            if (!id.equals(userId)) {
+                                User x = new User(id, name);
+                                adapter.add(x);
+                            }
+                        }
+                    } catch (Exception e) {
+                    }
+
+
+                    mUserAdapter = new UserAdapter(v.getContext(), adapter);
+                    mCallNumET.setThreshold(1);//will start working from first character
+                    mCallNumET.setAdapter(mUserAdapter);//setting the adapter data into the AutoCompleteTextView
+
+                } else {
+                    Toast.makeText(getApplicationContext(), "lost the focus", Toast.LENGTH_LONG).show();
                 }
             }
-        } catch (Exception e) {
-        }
+        });
 
-
-        this.mUserAdapter = new UserAdapter(this, adapter);
-        mCallNumET.setThreshold(1);//will start working from first character
-        mCallNumET.setAdapter(this.mUserAdapter);//setting the adapter data into the AutoCompleteTextView
 
 
         //add friends to friend list
@@ -196,76 +199,91 @@ public class MainActivity extends ListActivity {
         @Override
         public void call(Object... args) {
             String from = "";
+            String name  = "";
             JSONObject data = (JSONObject) args[0];
             try {
                 from = data.getString("from");
+                name = data.getString("name");
                 client.close();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             if(isAppIsInBackground(getApplicationContext())){
-                NotificationManager mManager;
-                mManager = (NotificationManager) getApplicationContext()
-                        .getSystemService(
-                                getApplicationContext().NOTIFICATION_SERVICE);
-                Intent in = new Intent(getApplicationContext(),
-                        IncomingCallActivity.class);
-                in.putExtra("CALLER_ID", from);
-                in.putExtra("USER_ID", userId);
-                in.putExtra("CALLER_NAME", "Lien Minh");
-                in.putExtra("USER_NAME",userName);
-                Notification notification = new Notification(R.drawable.notification_template_icon_bg,
-                        "Demo video  ", System.currentTimeMillis());
-                //RemoteViews notificationView = new RemoteViews(getPackageName(),
-                //        R.layout.notification_incoming_call);
-                in.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP
-                        | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//                NotificationManager mManager;
+//                mManager = (NotificationManager) getApplicationContext()
+//                        .getSystemService(
+//                                getApplicationContext().NOTIFICATION_SERVICE);
+//                Intent in = new Intent(getApplicationContext(),
+//                        IncomingCallActivity.class);
+//                in.putExtra("CALLER_ID", from);
+//                in.putExtra("USER_ID", userId);
+//                in.putExtra("CALLER_NAME", "Lien Minh");
+//                in.putExtra("USER_NAME",userName);
+//                Notification notification = new Notification(R.drawable.notification_template_icon_bg,
+//                        "Demo video  ", System.currentTimeMillis());
+//                //RemoteViews notificationView = new RemoteViews(getPackageName(),
+//                //        R.layout.notification_incoming_call);
+//                in.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP
+//                        | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//
+////                Intent receiveIntent = new Intent(getApplicationContext(), receiveButtonListener.class);
+////                PendingIntent pendingReceiveIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
+////                        receiveIntent, 0);
+////                notificationView.setOnClickPendingIntent(R.id.noti_receive,
+////                        pendingReceiveIntent);
+//////                Intent rejectIntent = new Intent(getApplicationContext(), rejectButtonListener.class);
+//////                PendingIntent pendingRejectIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
+//////                        rejectIntent, 0);
+//////                notificationView.setOnClickPendingIntent(R.id.noti_reject,
+//////                                                                   pendingRejectIntent);
+//
+//                PendingIntent pendingNotificationIntent = PendingIntent.getActivity(
+//                        getApplicationContext(), 0, in,
+//                        PendingIntent.FLAG_UPDATE_CURRENT);
+//                notification.flags |= Notification.FLAG_AUTO_CANCEL;
+//                notification.setLatestEventInfo(getApplicationContext(),
+//                        "Incoming phone", "You have a new phone ",
+//                        pendingNotificationIntent);
+//                //notification.contentView = notificationView;
+//                notification.contentIntent = pendingNotificationIntent;
+//                mManager.notify(0, notification);
+                Intent intent = new Intent(getApplicationContext(), IncomingCallActivity.class);
+                //intent.setComponent(new ComponentName(getPackageName(), IncomingCallActivity.class.getName()));
+                intent.setAction(Intent.ACTION_MAIN);
+                intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.putExtra("CALLER_ID", from);
+                intent.putExtra("USER_ID", userId);
+                intent.putExtra("CALLER_NAME", name);
+                intent.putExtra("USER_NAME", userName);
+                getApplicationContext().startActivity(intent);
 
-//                Intent receiveIntent = new Intent(getApplicationContext(), receiveButtonListener.class);
-//                PendingIntent pendingReceiveIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
-//                        receiveIntent, 0);
-//                notificationView.setOnClickPendingIntent(R.id.noti_receive,
-//                        pendingReceiveIntent);
-////                Intent rejectIntent = new Intent(getApplicationContext(), rejectButtonListener.class);
-////                PendingIntent pendingRejectIntent = PendingIntent.getBroadcast(getApplicationContext(), 0,
-////                        rejectIntent, 0);
-////                notificationView.setOnClickPendingIntent(R.id.noti_reject,
-////                                                                   pendingRejectIntent);
 
-                PendingIntent pendingNotificationIntent = PendingIntent.getActivity(
-                        getApplicationContext(), 0, in,
-                        PendingIntent.FLAG_UPDATE_CURRENT);
-                notification.flags |= Notification.FLAG_AUTO_CANCEL;
-                notification.setLatestEventInfo(getApplicationContext(),
-                        "Incoming phone", "You have a new phone ",
-                        pendingNotificationIntent);
-                //notification.contentView = notificationView;
-                notification.contentIntent = pendingNotificationIntent;
-                mManager.notify(0, notification);
+                //context.getApplicationContext().startActivity(it);
             }else{
                 Intent intent = new Intent(MainActivity.this, IncomingCallActivity.class);
                 intent.putExtra("CALLER_ID", from);
                 intent.putExtra("USER_ID", userId);
-                intent.putExtra("CALLER_NAME", "Lien Minh");
+                intent.putExtra("CALLER_NAME", name);
                 intent.putExtra("USER_NAME",userName);
                 startActivity(intent);
             }
         }
     };
 
-    public static class receiveButtonListener extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d("minhtest","Receive call");
-        }
-    }
-
-    public static class rejectButtonListener extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d("minhtest","Reject call");
-        }
-    }
+//    public static class receiveButtonListener extends BroadcastReceiver {
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            Log.d("minhtest","Receive call");
+//        }
+//    }
+//
+//    public static class rejectButtonListener extends BroadcastReceiver {
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            Log.d("minhtest","Reject call");
+//        }
+//    }
 
     /**
      * Check application is in the backgroud or in foreground
@@ -317,7 +335,7 @@ public class MainActivity extends ListActivity {
                 HttpResponse response = httpclient.execute(request);
                 name = EntityUtils.toString(response.getEntity());
             } catch (Exception e) {
-                Log.e("log_tag", "Error in http connection " + e.toString());
+                //Log.e("log_tag", "Error in http connection " + e.toString());
             }
             return name;
         }
@@ -355,7 +373,7 @@ public class MainActivity extends ListActivity {
                 }
 
             } catch (Exception e) {
-                Log.e("log_tag", "Error in http connection " + e.toString());
+                 //Log.e("log_tag", "Error in http connection " + e.toString());
             }
             return name;
         }
@@ -394,7 +412,7 @@ public class MainActivity extends ListActivity {
                     httpPost.setEntity(new UrlEncodedFormEntity(nameValuePair));
                 } catch (UnsupportedEncodingException e) {
                     // log exception
-                    Log.d("minh_res", e.getMessage());
+                    //Log.d("minh_res", e.getMessage());
                     e.printStackTrace();
                 }
                 //making POST request.
@@ -403,17 +421,17 @@ public class MainActivity extends ListActivity {
                     String json_string = EntityUtils.toString(response.getEntity());
                     JSONObject json_data = new JSONObject(json_string);
                     int status = json_data.getInt("status");
-                    Log.d("minhstatus", Integer.toString(status));
+                    //Log.d("minhstatus", Integer.toString(status));
                     if (status == 1) {
                         return 1;
                     }
 
                 } catch (ClientProtocolException e) {
-                    Log.d("minh_res", "error");
+                    //Log.d("minh_res", "error");
                 } catch (IOException e) {
                     // Log exception
                     e.printStackTrace();
-                    Log.d("minh_res", e.getMessage());
+                    //Log.d("minh_res", e.getMessage());
 
                 }
             } catch (Exception e) {
@@ -468,11 +486,11 @@ public class MainActivity extends ListActivity {
                 } catch (ClientProtocolException e) {
                     // Log exception
 
-                    Log.d("minh_res", "error");
+                    //Log.d("minh_res", "error");
                 } catch (IOException e) {
                     // Log exception
                     e.printStackTrace();
-                    Log.d("minh_res", e.getMessage());
+                    //Log.d("minh_res", e.getMessage());
 
                 }
             } catch (Exception e) {
@@ -524,16 +542,16 @@ public class MainActivity extends ListActivity {
                     json_string = EntityUtils.toString(response.getEntity());
                     JSONObject x = new JSONObject(json_string);
                     json_string = x.getString("name");
-                    Log.d("minhminhminh", json_string);
+                    //Log.d("minhminhminh", json_string);
 
                 } catch (ClientProtocolException e) {
                     // Log exception
 
-                    Log.d("minh_res", "error");
+                    //Log.d("minh_res", "error");
                 } catch (IOException e) {
                     // Log exception
                     e.printStackTrace();
-                    Log.d("minh_res", e.getMessage());
+                    //Log.d("minh_res", e.getMessage());
 
                 }
             } catch (Exception e) {
@@ -565,29 +583,6 @@ public class MainActivity extends ListActivity {
         }
     }
 
-    /**
-     * Take the user to a video screen. USER_NAME is a required field.
-     *
-     * @param id button that is clicked to trigger toVideo
-     */
-    public void makeBrowserCall(String id, String status) {
-        String callNum = id;
-//        if (callNum.isEmpty() || callNum.equals(this.userId)) {
-//            showToast("Enter a valid user ID to call.");
-//            return;
-//        }
-//        if (status.equals("Offline")){
-//            showToast("Your friend is offline. Please call again later!");
-//        }else{
-            //remove callback check status every 10
-            handler.removeCallbacksAndMessages(null);
-            //dispatchCall(callNum);
-            String url = "http://192.168.1.17:3000/"+callNum;
-            Intent i = new Intent(Intent.ACTION_VIEW);
-            i.setData(Uri.parse(url));
-            startActivity(i);
-        //}
-    }
 
     /**
      * TODO: Debate who calls who. Should one be on standby? Or use State API for busy/available
@@ -606,6 +601,14 @@ public class MainActivity extends ListActivity {
         intent.putExtra("name", this.userName);
         intent.putExtra("number", callNum);
         startActivity(intent);
+
+//        Intent intent = new Intent(MainActivity.this, CallingActivity.class);
+//        intent.putExtra("CALLER_ID", callNum);
+//        intent.putExtra("USER_ID", userId);
+//        intent.putExtra("CALLER_NAME", "Lien Minh");
+//        intent.putExtra("USER_NAME", userName);
+//        startActivity(intent);
+
     }
 
 
@@ -659,7 +662,7 @@ public class MainActivity extends ListActivity {
             try {
                 try {
                     status = new RetrieveStatusTask().execute(user.getUserId()).get();
-                    Log.d("minhlog","come here handler status old: " + user.getStatus()+ "stayts new "+status);
+                    //Log.d("minhlog","come here handler status old: " + user.getStatus()+ "stayts new "+status);
                     if (status != null && !status.isEmpty() && !status.equals(user.getStatus())) {
                         user.setStatus(status);
                         checkChange = 1;
@@ -677,14 +680,16 @@ public class MainActivity extends ListActivity {
         }
     }
 
+
+
     public void startHandler() {
         handler.postDelayed(new Runnable() {
 
             @Override
             public void run() {
                 checkFriendStatus();
-                handler.postDelayed(this, 10000);
+                handler.postDelayed(this, 3000);
             }
-        }, 10000);
+        }, 3000);
     }
 }

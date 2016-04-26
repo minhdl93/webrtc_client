@@ -201,7 +201,6 @@ public class RegisterActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Void... params) {
             try {
-                //Log.d("register minh","here");
                 HttpClient httpClient = new DefaultHttpClient();
                 // replace with your url
                 String host = "http://" + getResources().getString(R.string.host);
@@ -280,7 +279,6 @@ public class RegisterActivity extends AppCompatActivity {
                                 mUsernameView.setText("");
                                 mNameView.setText("");
                                 mPhoneView.setText("");
-
                             }
                         })
                         .setIcon(android.R.drawable.ic_dialog_alert)

@@ -1,7 +1,11 @@
 package fr.pchab.androidrtc;
 
+import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,11 +26,14 @@ public class IncomingCallActivity extends AppCompatActivity {
     private String userId;
     private Socket client;
     private String callerId;
+    private Vibrator vib;
+    private MediaPlayer mMediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_incoming_call);
+
         Bundle extras = getIntent().getExtras();
         callerId = extras.getString("CALLER_ID");
         userId = extras.getString("USER_ID");
@@ -36,6 +43,15 @@ public class IncomingCallActivity extends AppCompatActivity {
 
         this.mCallerID = (TextView) findViewById(R.id.caller_id);
         this.mCallerID.setText(this.callerName);
+        mMediaPlayer = new MediaPlayer();
+        mMediaPlayer = MediaPlayer.create(this, R.raw.skype_call);
+        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mMediaPlayer.setLooping(true);
+        mMediaPlayer.start();
+
+        vib= (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        long[] pattern = {0, 100, 1000};
+        vib.vibrate(pattern,0);
     }
 
 
@@ -52,6 +68,8 @@ public class IncomingCallActivity extends AppCompatActivity {
     }
 
     public void acceptCall(View view) {
+        vib.cancel();
+        mMediaPlayer.stop();
         finish();
         Intent intent = new Intent(IncomingCallActivity.this, RtcActivity.class);
         intent.putExtra("id", this.userId);
@@ -82,6 +100,8 @@ public class IncomingCallActivity extends AppCompatActivity {
      * @param view
      */
     public void rejectCall(View view) {
+        vib.cancel();
+        mMediaPlayer.stop();
         finish();
         String host = "http://" + getResources().getString(R.string.host);
         host += (":" + getResources().getString(R.string.port) + "/");

@@ -10,6 +10,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
+import android.media.RingtoneManager;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
@@ -323,16 +324,25 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
         }
     }
 
+    /**
+     * This function is being call when user reject phone call
+     */
+    @Override
+    public void onReject() {
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivity(intent);
+    }
+
     @Override
     public void onAcceptCall(String callId) {
         try {
-            try{ Thread.sleep(1000); }catch(InterruptedException e){ }
+            try{ Thread.sleep(1500); }catch(InterruptedException e){ }
             answer(callId);
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
-
 
     /**
      * This function is being when the chat event is being triggered
@@ -359,6 +369,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
                             RtcActivity.class);
                     Notification notification = new Notification(R.drawable.notification_template_icon_bg,
                             "New message from "+id, System.currentTimeMillis());
+                    notification.sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                     in.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP
                             | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
@@ -486,10 +497,6 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
                 scalingType,false);
     }
 
-    @Override
-    public void onReceiveCall(String id) {
-
-    }
 
     /**
      * Being called when remote stream is removed

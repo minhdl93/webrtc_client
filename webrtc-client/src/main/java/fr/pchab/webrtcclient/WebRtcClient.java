@@ -59,7 +59,7 @@ public class WebRtcClient {
 
         void onRemoveRemoteStream(int endPoint);
 
-        void onReceiveCall(String id);
+        void onReject();
     }
 
     private interface Command {
@@ -190,7 +190,7 @@ public class WebRtcClient {
         private Emitter.Listener onEject = new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-                android.os.Process.killProcess(android.os.Process.myPid());
+                mListener.onReject();
             }
         };
 
@@ -457,9 +457,9 @@ public class WebRtcClient {
         client.emit("removeVideo", message);
     }
 
-    public String client_id() {
-        return client.id();
-    }
+//    public String client_id() {
+//        return client.id();
+//    }
 
     public void startClient(String to, String type, JSONObject payload) throws JSONException {
         Log.d("minhminh", "vao ham moi tao");
