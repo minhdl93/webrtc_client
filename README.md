@@ -11,7 +11,7 @@ You need [webrtc_server](https://github.com/DangLienMinh/webrtc_server) up and r
 #Result screen
 
 Login 
-<img src="https://drive.google.com/file/d/0B9Oj7so-73ZcN3FLd05YT1R5S0E/view?usp=sharing" height=500 />
+<img src="https://www.dropbox.com/s/zwibg91quy397in/Screenshot_2016-04-27-16-11-48.png?dl=0" height=500 />
 
 ## Libraries
 
