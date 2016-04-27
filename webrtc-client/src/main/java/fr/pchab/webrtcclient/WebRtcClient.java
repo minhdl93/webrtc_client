@@ -384,7 +384,7 @@ public class WebRtcClient {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-//        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121:3478"));
+        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121:3478"));
 //        iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
 //        iceServers.add(new PeerConnection.IceServer("stun:stun1.l.google.com:19302"));
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));

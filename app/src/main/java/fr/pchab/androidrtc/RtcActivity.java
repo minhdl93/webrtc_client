@@ -206,6 +206,7 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     public void stopvideo(View view) {
         if (client != null) {
             client.stopVideo();
+
         }
     }
 

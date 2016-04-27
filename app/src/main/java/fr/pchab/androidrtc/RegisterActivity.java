@@ -104,11 +104,11 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
         // Check for a valid email address.
-        if (TextUtils.isEmpty(email) && !isValidEmail(email)) {
-            mEmailView.setError(getString(R.string.error_field_required));
-            focusView = mEmailView;
-            cancel = true;
-        }
+//        if (TextUtils.isEmpty(email) && !isValidEmail(email)) {
+//            mEmailView.setError(getString(R.string.error_field_required));
+//            focusView = mEmailView;
+//            cancel = true;
+//        }
 
         // Check for a valid email address.
         if (TextUtils.isEmpty(name)) {
@@ -118,11 +118,11 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
         // Check for a valid email address.
-        if (TextUtils.isEmpty(phone)) {
-            mPhoneView.setError(getString(R.string.error_field_required));
-            focusView = mPhoneView;
-            cancel = true;
-        }
+//        if (TextUtils.isEmpty(phone)) {
+//            mPhoneView.setError(getString(R.string.error_field_required));
+//            focusView = mPhoneView;
+//            cancel = true;
+//        }
 
         // Check for a valid email address.
         if (TextUtils.isEmpty(username)) {
@@ -274,11 +274,11 @@ public class RegisterActivity extends AppCompatActivity {
                         .setMessage("Cannot register, please try again!")
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                mEmailView.setText("");
-                                mPasswordView.setText("");
-                                mUsernameView.setText("");
-                                mNameView.setText("");
-                                mPhoneView.setText("");
+//                                mEmailView.setText("");
+//                                mPasswordView.setText("");
+//                                mUsernameView.setText("");
+//                                mNameView.setText("");
+//                                mPhoneView.setText("");
                             }
                         })
                         .setIcon(android.R.drawable.ic_dialog_alert)

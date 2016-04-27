@@ -13,6 +13,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
@@ -261,7 +262,10 @@ public class MainActivity extends ListActivity {
 
                 //context.getApplicationContext().startActivity(it);
             }else{
-                Intent intent = new Intent(MainActivity.this, IncomingCallActivity.class);
+                Intent intent = new Intent(getApplicationContext(), IncomingCallActivity.class);
+                intent.setAction(Intent.ACTION_MAIN);
+                intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtra("CALLER_ID", from);
                 intent.putExtra("USER_ID", userId);
                 intent.putExtra("CALLER_NAME", name);
@@ -596,11 +600,29 @@ public class MainActivity extends ListActivity {
      * @param callNum Number to publish a call to.
      */
     public void dispatchCall(final String callNum) {
+        Log.d("minhfinal",callNum);
         Intent intent = new Intent(MainActivity.this, RtcActivity.class);
+        //boolean activityExists = intent.resolveActivityInfo(getPackageManager(), 0) != null;
+        //Log.d("minhfinal",Boolean.toString(activityExists) );
+//        if (activityExists){
+//            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+//            intent.putExtra("id", this.userId);
+//            intent.putExtra("name", this.userName);
+//            intent.putExtra("number", callNum);
+//        }else{
+//            Log.d("minhfinal", "come here re");
+//            intent.putExtra("id", this.userId);
+//            intent.putExtra("name", this.userName);
+//            intent.putExtra("number", callNum);
+//
+//        }
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        Log.d("minhfinal", "come here re");
         intent.putExtra("id", this.userId);
         intent.putExtra("name", this.userName);
         intent.putExtra("number", callNum);
         startActivity(intent);
+
 
 //        Intent intent = new Intent(MainActivity.this, CallingActivity.class);
 //        intent.putExtra("CALLER_ID", callNum);
