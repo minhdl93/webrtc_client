@@ -1,24 +1,17 @@
-# AndroidRTC
+# WebRTC android client - forked from https://github.com/pchab/AndroidRTC
 
-## WebRTC Live Streaming
+An Android client for [webrtc_server](https://github.com/DangLienMinh/webrtc_server).
 
-An Android client for [ProjectRTC](https://github.com/pchab/ProjectRTC).
-
-It is designed to demonstrate WebRTC video calls between androids and/or desktop browsers, but WebRtcClient could be used in other scenarios. 
-Build with Android Studio 1.1.0. The Intellij IDEA version is in the master branch.
-You can import the webrtc-client module in your own app if you want to work with it.
-
-It is also featured in the [Android Arsenal](https://android-arsenal.com/details/3/1262) !
+It is designed to demonstrate WebRTC video calls between androids clients.
 
 ## How To
 
-You need [ProjectRTC](https://github.com/pchab/ProjectRTC) up and running, and it must be somewhere that your android can access. (You can quickly test this with your android browser). Modify the host string (in res/values/strings.xml) to the server IP.
+You need [webrtc_server](https://github.com/DangLienMinh/webrtc_server) up and running on port 3000, and it must be somewhere that your android can access. Modify the host string (in res/values/strings.xml) to the server IP.
 
-When you launch the app, you will be given several options to send a message : "Call someone".
-Use this menu to send a link of your stream. This link can be opened with a WebRTC-capable browser or by another AndroidRTC.
-The video call should then start.
+#Result screen
 
-Your stream should appear as "android_test" in ProjectRTC, so you can also use the call feature there.
+Login 
+<img src="https://drive.google.com/file/d/0B9Oj7so-73ZcN3FLd05YT1R5S0E/view?usp=sharing" height=500 />
 
 ## Libraries
 
@@ -27,4 +20,4 @@ Your stream should appear as "android_test" in ProjectRTC, so you can also use t
 
 ## Author
 
-- [Pierre Chabardes](mailto:pierre@chabardes.net)
+- [Minh Dang](mailto:danglienminh93@gmail.com)
