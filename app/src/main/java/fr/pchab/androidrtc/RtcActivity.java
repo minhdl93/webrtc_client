@@ -202,7 +202,6 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
             }
             try{ Thread.sleep(1000); }catch(InterruptedException e){ }
             onDestroy();
-
         }
     }
 
@@ -360,9 +359,15 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
      */
     @Override
     public void onReject() {
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        startActivity(intent);
+//        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+//        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+//        startActivity(intent);
+//        onDestroy();
+        //android.os.Process.killProcess(android.os.Process.myPid());
+//        Intent mainview = new Intent(getApplicationContext(),MainActivity.class);
+//        mainview.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//        startActivity(mainview);\
     }
 
     @Override

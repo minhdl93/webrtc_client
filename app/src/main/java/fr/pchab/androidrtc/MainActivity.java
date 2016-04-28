@@ -684,7 +684,7 @@ public class MainActivity extends ListActivity {
             try {
                 try {
                     status = new RetrieveStatusTask().execute(user.getUserId()).get();
-                    //Log.d("minhlog","come here handler status old: " + user.getStatus()+ "stayts new "+status);
+                    Log.d("minhlog","come here handler status old: " + user.getStatus()+ "stayts new "+status);
                     if (status != null && !status.isEmpty() && !status.equals(user.getStatus())) {
                         user.setStatus(status);
                         checkChange = 1;

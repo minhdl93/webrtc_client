@@ -28,6 +28,7 @@
         android:padding="10dp"
         android:background="#64000000"
         android:layout_alignParentBottom="true"
+        android:focusableInTouchMode="true"
         android:orientation="horizontal">
 
         <EditText

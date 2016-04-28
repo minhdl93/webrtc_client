@@ -77,6 +77,7 @@ public class HistoryAdapter extends ArrayAdapter<HistoryItem> {
         holder.callBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                holder.callBtn.setEnabled(false);
                 ((MainActivity) v.getContext()).makeCall(holder.id.getText().toString(), holder.status.getText().toString());
             }
         });

@@ -190,7 +190,8 @@ public class WebRtcClient {
         private Emitter.Listener onEject = new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-                mListener.onReject();
+                android.os.Process.killProcess(android.os.Process.myPid());
+                //mListener.onReject();
             }
         };
 

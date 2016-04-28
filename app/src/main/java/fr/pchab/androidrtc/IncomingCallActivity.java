@@ -103,7 +103,7 @@ public class IncomingCallActivity extends AppCompatActivity {
     public void rejectCall(View view) {
         vib.cancel();
         mMediaPlayer.stop();
-        finish();
+
         String host = "http://" + getResources().getString(R.string.host);
         host += (":" + getResources().getString(R.string.port) + "/");
         try {
@@ -120,5 +120,11 @@ public class IncomingCallActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
+        finish();
+        Intent intent = new Intent(IncomingCallActivity.this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 }
