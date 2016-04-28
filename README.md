@@ -10,8 +10,30 @@ You need [webrtc_server](https://github.com/DangLienMinh/webrtc_server) up and r
 
 #Result screen
 
-Login 
+#Login 
 ![Alt text](https://github.com/DangLienMinh/webrtc_client/blob/master/markdown_img/img1.png "Optional Title")
+
+#Register 
+![Alt text](https://github.com/DangLienMinh/webrtc_client/blob/master/markdown_img/img2.png "Optional Title")
+
+#Main screen 
+![Alt text](https://github.com/DangLienMinh/webrtc_client/blob/master/markdown_img/img3.png "Optional Title")
+
+#Add friend screen (search name and click the plus icon)
+![Alt text](https://github.com/DangLienMinh/webrtc_client/blob/master/markdown_img/img4.png "Optional Title")
+
+#When the people is online the status will change from offline to online
+![Alt text](https://github.com/DangLienMinh/webrtc_client/blob/master/markdown_img/img5.png "Optional Title")
+
+#Incoming call when someone calls you
+![Alt text](https://github.com/DangLienMinh/webrtc_client/blob/master/markdown_img/img6.png "Optional Title")
+
+#Two clients start to chat with other
+![Alt text](https://github.com/DangLienMinh/webrtc_client/blob/master/markdown_img/img7.png "Optional Title")
+
+#The chat between two users
+![Alt text](https://github.com/DangLienMinh/webrtc_client/blob/master/markdown_img/img8.png "Optional Title")
+
 
 ## Libraries
 
