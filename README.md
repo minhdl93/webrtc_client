@@ -11,7 +11,7 @@ You need [webrtc_server](https://github.com/DangLienMinh/webrtc_server) up and r
 #Result screen
 
 Login 
-![Alt text](/../webrtc_client/markdown_img/to/img1.png?raw=true "Optional Title")
+![Alt text](https://github.com/DangLienMinh/webrtc_client/blob/master/markdown_img/img1.png "Optional Title")
 
 ## Libraries
 
