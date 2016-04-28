@@ -75,7 +75,7 @@ public class IncomingCallActivity extends AppCompatActivity {
         intent.putExtra("id", this.userId);
         intent.putExtra("name",this.userName);
         intent.putExtra("callerIdChat", callerId);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        //incointent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         String host = "http://" + getResources().getString(R.string.host);
         host += (":" + getResources().getString(R.string.port) + "/");

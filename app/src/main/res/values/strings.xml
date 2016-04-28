@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Demo chat and call</string>
+    <!--<string name="host">dev.gumiviet.com</string>-->
+    <!--<string name="port">300</string>-->
     <string name="host">dev.gumiviet.com</string>
     <string name="port">300</string>
     <string name="action_settings">Options</string>

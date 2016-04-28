@@ -14,6 +14,7 @@ import android.media.RingtoneManager;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager.LayoutParams;
@@ -186,12 +187,21 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
      */
     public void hangup(View view) {
         if (client != null) {
+            String mNumber = "";
+            try {
+                if (number != "" && number != null){
+                    mNumber = number;
+                }else{
+                    mNumber= callerIdChat;
+                }
+                JSONObject messageJSON = new JSONObject();
+                messageJSON.put("callerId", mNumber);
+                client.removeCall(messageJSON);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            try{ Thread.sleep(1000); }catch(InterruptedException e){ }
             onDestroy();
-//            try {
-//                client.removeVideo(number);
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
 
         }
     }
@@ -242,6 +252,12 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
             notificationView.setOnClickPendingIntent(R.id.hang_up_noti,
                     pendingHangIntent);
             Intent stopIntent = new Intent(this, stopButtonListener.class);
+            if (number != "" && number != null){
+                stopIntent.putExtra("otheruser",number);
+            }else{
+                stopIntent.putExtra("otheruser",callerIdChat);
+            }
+
             PendingIntent pendingStopIntent = PendingIntent.getBroadcast(this, 0,
                     stopIntent, 0);
             notificationView.setOnClickPendingIntent(R.id.end_call_noti,pendingStopIntent
@@ -266,11 +282,25 @@ public class RtcActivity extends ListActivity implements WebRtcClient.RtcListene
     public static class stopButtonListener extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            Bundle extras = intent.getExtras();
             //client.onDestroy();
             //android.os.Process.killProcess(android.os.Process.myPid());
-            Intent mainview =new Intent(context,MainActivity.class);
+            Intent mainview = new Intent(context,MainActivity.class);
             mainview.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(mainview);
+
+            if (extras.containsKey("otheruser")){
+                try {
+                JSONObject messageJSON = new JSONObject();
+                messageJSON.put("callerId", extras.getString("otheruser"));
+                client.removeCall(messageJSON);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            }else{
+                Log.d("minhhhh","Loi khong co key");
+            }
+
         }
     }
 

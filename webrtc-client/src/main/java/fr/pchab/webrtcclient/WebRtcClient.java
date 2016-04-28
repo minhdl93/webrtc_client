@@ -197,7 +197,6 @@ public class WebRtcClient {
         private Emitter.Listener onRemoveCall = new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-                Log.d("minhhangup","test");
                 android.os.Process.killProcess(android.os.Process.myPid());
             }
         };
@@ -375,7 +374,7 @@ public class WebRtcClient {
         client.on("chat", messageHandler.onChat);
         client.on("ejectcall", messageHandler.onEject);
         client.on("acceptcall", messageHandler.onAccept);
-        client.on("removeVideo", messageHandler.onRemoveCall);
+        client.on("removecall", messageHandler.onRemoveCall);
         client.connect();
         try {
             JSONObject message = new JSONObject();
@@ -384,7 +383,7 @@ public class WebRtcClient {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121:3478"));
+        //iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121:3478"));
         //iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
         //iceServers.add(new PeerConnection.IceServer("stun:stun1.l.google.com:19302"));
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
@@ -451,10 +450,9 @@ public class WebRtcClient {
         client.emit("chat", message);
     }
 
-    public void removeVideo(String otherID) throws JSONException{
-        JSONObject message = new JSONObject();
-        message.put("other", otherID);
-        client.emit("removeVideo", message);
+    public void removeCall(JSONObject message){
+        client.emit("removecall", message);
+
     }
 
 //    public String client_id() {

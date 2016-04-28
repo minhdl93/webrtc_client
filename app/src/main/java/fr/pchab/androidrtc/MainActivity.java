@@ -616,7 +616,7 @@ public class MainActivity extends ListActivity {
 //            intent.putExtra("number", callNum);
 //
 //        }
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         Log.d("minhfinal", "come here re");
         intent.putExtra("id", this.userId);
         intent.putExtra("name", this.userName);
