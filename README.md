@@ -1,4 +1,6 @@
-# WebRTC android client - forked from https://github.com/pchab/AndroidRTC
+# WebRTC android client - 
+Core forked from https://github.com/pchab/AndroidRTC
+GUI forked from https://github.com/GleasonK/AndroidRTC
 
 An Android client for [webrtc_server](https://github.com/DangLienMinh/webrtc_server).
 
